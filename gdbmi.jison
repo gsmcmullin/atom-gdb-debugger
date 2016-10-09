@@ -1,10 +1,11 @@
-
 /* GDB/MI parser. */
 
 %lex
 
 DIGIT                       [0-9]
 IDENTIFIER                  [a-zA-Z][a-zA-Z0-9_-]*
+
+%x cstring
 
 %%
 "^"                return 'CARROT';
@@ -30,7 +31,18 @@ IDENTIFIER                  [a-zA-Z][a-zA-Z0-9_-]*
 {DIGIT}+           return 'INTEGER';
 {IDENTIFIER}       return 'STRING';
 
-\"(\\.|[^\\"])*\"  return 'CSTRING';
+\"                      { this.gdbmi_cstring = ""; this.begin('cstring'); }
+<cstring>\"             { yytext = this.gdbmi_cstring; this.begin('INITIAL'); return 'CSTRING'; }
+<cstring>\n             { throw new Error('Unterminated string'); }
+<cstring>\\[0-7]\{1-3\} { this.gdbmi_cstring += parseInt(yytext, 8); }
+<cstring>\\[0-9]+       { throw new Error('Invalid escape sequence'); }
+<cstring>\\n            { this.gdbmi_cstring += '\n' }
+<cstring>\\t            { this.gdbmi_cstring += '\t' }
+<cstring>\\r            { this.gdbmi_cstring += '\r' }
+<cstring>\\b            { this.gdbmi_cstring += '\b' }
+<cstring>\\f            { this.gdbmi_cstring += '\f' }
+<cstring>\\(.|\n)       { this.gdbmi_cstring += yytext.slice(1) }
+<cstring>[^\\\n\"]+     { this.gdbmi_cstring += yytext }
 
 /lex
 
@@ -38,6 +50,7 @@ IDENTIFIER                  [a-zA-Z][a-zA-Z0-9_-]*
 
 opt_record_list
     : opt_record_list PROMPT NEWLINE
+        {console.log($1)}
     | opt_record_list record NEWLINE
         {$$ = $1.concat([$2])}
     |
@@ -52,18 +65,18 @@ record
 
 result_record
     : opt_token CARROT result_class
-        {$$ = {token: $1, cls:$3}}
+        {$$ = {type: 'RESULT', token: $1, cls:$3}}
     | opt_token CARROT result_class COMMA result_list
-        {$$ = {token: $1, cls:$3, results: $5}}
+        {$$ = {type: 'RESULT', token: $1, cls:$3, results: $5}}
     ;
 
 async_record
     : opt_token async_record_class async_class
-        {$$ = {token: $1, cls: $2, rcls: $3, results: []}}
+        {$$ = {type: 'ASYNC', token: $1, cls: $2, rcls: $3, results: []}}
     | opt_token async_record_class async_class COMMA result_list
-        {$$ = {token: $1, cls: $2, rcls: $3, results: $5}}
+        {$$ = {type: 'ASYNC', token: $1, cls: $2, rcls: $3, results: $5}}
     | opt_token async_record_class async_class COMMA BRACE_OPEN result_list BRACE_CLOSE
-        {$$ = {token: $1, cls: $2, rcls: $3, results: $6}}
+        {$$ = {type: 'ASYNC', token: $1, cls: $2, rcls: $3, results: $6}}
     ;
 
 async_record_class
@@ -128,7 +141,7 @@ list
 
 stream_record
     : stream_record_class CSTRING
-        {$$ = {cls: $1, "cstring": $2}}
+        {$$ = {type: 'OUTPUT', cls: $1, "cstring": $2}}
     ;
 
 stream_record_class
