@@ -1,5 +1,5 @@
 
-/* description: GDB/MI parser. */
+/* GDB/MI parser. */
 
 %lex
 
@@ -39,7 +39,9 @@ IDENTIFIER                  [a-zA-Z][a-zA-Z0-9_-]*
 opt_record_list
     : opt_record_list PROMPT NEWLINE
     | opt_record_list record NEWLINE
+        {$$ = $1.concat([$2])}
     |
+        {$$ = []}
     ;
 
 record
@@ -50,37 +52,43 @@ record
 
 result_record
     : opt_token CARROT result_class
+        {$$ = {token: $1, cls:$3}}
     | opt_token CARROT result_class COMMA result_list
+        {$$ = {token: $1, cls:$3, results: $5}}
     ;
 
 async_record
     : opt_token async_record_class async_class
+        {$$ = {token: $1, cls: $2, rcls: $3, results: []}}
     | opt_token async_record_class async_class COMMA result_list
+        {$$ = {token: $1, cls: $2, rcls: $3, results: $5}}
     | opt_token async_record_class async_class COMMA BRACE_OPEN result_list BRACE_CLOSE
+        {$$ = {token: $1, cls: $2, rcls: $3, results: $6}}
     ;
 
 async_record_class
     : ASTERISC
-    ;
-
-async_record_class
-    : PLUS
+        {$$ = 'EXEC'}
+    | PLUS
+        {$$ = 'STATUS'}
     | EQUALS
+        {$$ = 'NOTIFY'}
     ;
 
 result_class: STRING;
 
 async_class: STRING;
-result_list
-    : result
-    ;
 
 result_list
-    : result_list COMMA result
+    : result
+        {$$ = {}; $$[$1.key] = $1.value;}
+    | result_list COMMA result
+        {$$ = $1; $$[$3.key] = $3.value;}
     ;
 
 result
     : variable EQUALS value
+        {$$ = {key:$1, value:$3}}
     ;
 
 variable
@@ -89,7 +97,9 @@ variable
 
 value_list
     : value
+        {$$ = []}
     | value_list COMMA value
+        {$$ = $1.concat($3)}
     ;
 
 value
@@ -100,22 +110,34 @@ value
 
 tuple
     : BRACE_OPEN BRACE_CLOSE
+        {$$ = {}}
     | BRACE_OPEN result_list BRACE_CLOSE
+        {$$ = $2}
     ;
 
 list
     : BRACKET_OPEN BRACKET_CLOSE
+        {$$ = []}
     | BRACKET_OPEN value_list BRACKET_CLOSE
+        {$$ = $2}
     | BRACE_OPEN value_list BRACE_CLOSE
+        {$$ = $2}
     | BRACKET_OPEN result_list BRACKET_CLOSE
+        {$$ = $2}
     ;
 
-stream_record: stream_record_class CSTRING;
+stream_record
+    : stream_record_class CSTRING
+        {$$ = {cls: $1, "cstring": $2}}
+    ;
 
 stream_record_class
     : TILDA
+        {$$ = 'CONSOLE'}
     | AT
+        {$$ = 'TARGET'}
     | AMPERSAND
+        {$$ = 'LOG'}
     ;
 
 opt_token
