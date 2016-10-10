@@ -109,7 +109,9 @@ class GDB extends EventEmitter
     send_cli: (cmd) ->
         esc_cmd = ''
         for c in cmd
-            if c == '"' then c = '\\"'
+            switch c
+                when '"' then c = '\\"'
+                when '\\' then c = '\\\\'
             esc_cmd += c
         @send_mi "-interpreter-exec console \"#{esc_cmd}\""
 
