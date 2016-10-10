@@ -1,0 +1,18 @@
+{
+  "name": "atom-gdb-debugger",
+  "main": "./lib/atom-gdb-debugger",
+  "version": "0.0.0",
+  "description": "A short description of your package",
+  "keywords": [
+  ],
+  "activationCommands": {
+    "atom-workspace": "atom-gdb-debugger:toggle"
+  },
+  "repository": "https://github.com/atom/atom-gdb-debugger",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+  }
+}
