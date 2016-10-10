@@ -30,7 +30,7 @@ class GDB extends EventEmitter
         @child.stdout.on 'data', (data) => @_raw_output_handler(data)
         @child.stderr.on 'data', (data) => @_raw_output_handler(data)
         @child.on 'exit', => @_child_exited()
-        @_set_state 'BUSY'
+        @_set_state 'IDLE'
 
     disconnect: ->
         # Politely request the GDB child process to exit
@@ -52,8 +52,6 @@ class GDB extends EventEmitter
     _line_output_handler: (line) ->
         # Handle line buffered output from GDB child process
         @emit 'gdbmi-raw', line
-        if line.search('\\(gdb\\)') >= 0
-            @_drain_queue()
         r = @parser.parse line
         if not r? then return
         @emit 'gdbmi-ast', r
@@ -82,6 +80,7 @@ class GDB extends EventEmitter
 
     _result_record_handler: (cls, results) ->
         console.log "#{cls}: #{JSON.stringify(results)}"
+        @_drain_queue()
 
     _child_exited: () ->
         # Clean up state if/when GDB child process exits
