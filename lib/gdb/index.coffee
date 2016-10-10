@@ -52,15 +52,15 @@ class GDB extends EventEmitter
     _line_output_handler: (line) ->
         # Handle line buffered output from GDB child process
         @emit 'gdbmi-raw', line
-        ast = @parser.parse(line+'\n')
-        for r in ast
-            @emit 'gdbmi-ast', r
-            switch r.type
-                when 'OUTPUT' then @emit 'console-output', r.cls, r.cstring
-                when 'ASYNC' then @_async_record_handler r.cls, r.rcls, r.results
-                when 'RESULT' then @_result_record_handler r.cls, r.results
         if line.search('\\(gdb\\)') >= 0
             @_drain_queue()
+        r = @parser.parse line
+        if not r? then return
+        @emit 'gdbmi-ast', r
+        switch r.type
+            when 'OUTPUT' then @emit 'console-output', r.cls, r.cstring
+            when 'ASYNC' then @_async_record_handler r.cls, r.rcls, r.results
+            when 'RESULT' then @_result_record_handler r.cls, r.results
 
     _async_record_handler: (cls, rcls, results) ->
         #console.log "#{cls} (#{rcls}): #{JSON.stringify(results)}"

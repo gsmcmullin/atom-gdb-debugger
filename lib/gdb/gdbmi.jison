@@ -22,10 +22,6 @@ IDENTIFIER                  [a-zA-Z][a-zA-Z0-9_-]*
 "}"                return 'BRACE_CLOSE';
 "(gdb)"            return 'PROMPT';
 
-\n                 return 'NEWLINE';
-\r\n               return 'NEWLINE';
-\r                 return 'NEWLINE';
-
 \s                 /* skip whitespace */
 
 {DIGIT}+           return 'INTEGER';
@@ -44,20 +40,15 @@ IDENTIFIER                  [a-zA-Z][a-zA-Z0-9_-]*
 <cstring>\\(.|\n)       { this.gdbmi_cstring += yytext.slice(1) }
 <cstring>[^\\\n\"]+     { this.gdbmi_cstring += yytext }
 
-<<EOF>>               return 'EOF';
-
 /lex
 
 %%
 
-all : opt_record_list EOF {return $1};
-
-opt_record_list
-    : opt_record_list PROMPT NEWLINE
-    | opt_record_list record NEWLINE
-        {$$ = $1.concat([$2])}
-    |
-        {$$ = []}
+all
+    : record
+        { return $1 }
+    | PROMPT
+        { return null }
     ;
 
 record
