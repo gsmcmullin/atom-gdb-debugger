@@ -20,16 +20,20 @@ class AtomGdbDebuggerView extends View
             @target_state.text state
 
         @gdb.on 'frame-changed', (frame) =>
-            if not frame?
+            if not frame.addr?
                 @frame.text '(no frame)'
                 return
-            @frame.text "#{frame.file}:#{frame.line}"
+            fr_text = "#{frame.addr} in #{frame.func}()"
+            if frame.file?
+                fr_text += " (#{frame.file}:#{frame.line})"
+            @frame.text fr_text
 
     @content: ->
         @div class: 'gdb-debugger-panel', =>
             @div =>
-                @button 'Connect', click: 'do_connect', outlet: 'connect'
-                @button 'Disconnect', click: 'do_disconnect', outlet: 'disconnect', style: 'display: none'
+                @div class: 'btn-group', =>
+                    @button class: 'btn icon icon-bug', click: 'do_connect', outlet: 'connect'
+                    @button class: 'btn icon icon-circle-slash', click: 'do_disconnect', outlet: 'disconnect', style: 'display: none'
                 @div class: 'state-display', =>
                     @span '(no frame)', outlet: 'frame'
                     @span 'DISCONNECTED', outlet: 'state'
