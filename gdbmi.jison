@@ -75,7 +75,7 @@ result_record
 
 async_record
     : opt_token async_record_class async_class
-        {$$ = {type: 'ASYNC', token: $1, cls: $2, rcls: $3, results: []}}
+        {$$ = {type: 'ASYNC', token: $1, cls: $2, rcls: $3, results: {}}}
     | opt_token async_record_class async_class COMMA result_list
         {$$ = {type: 'ASYNC', token: $1, cls: $2, rcls: $3, results: $5}}
     | opt_token async_record_class async_class COMMA BRACE_OPEN result_list BRACE_CLOSE

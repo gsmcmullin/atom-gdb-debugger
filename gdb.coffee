@@ -4,21 +4,33 @@ child_process = require 'child_process'
 {Parser} = require './gdbmi.js'
 
 class GDB extends EventEmitter
+    state: 'DISCONNECTED'
+    target_state: 'EXITED'
+    child: null
+    next_token: 0
+    cmdq: []
+    partial_line: ''
+
     constructor: (@cmdline) ->
         @parser = new Parser
-        @cmdq = []
-        @next_token = 0
-        @state = 'DISCONNECTED'
-        @target_state = 'EXITED'
-        @partial_line = ''
+
+    _set_state: (state) ->
+        if state == @state then return
+        @state = state
+        @emit 'state-changed', state
+
+    _set_target_state: (state) ->
+        if state == @target_state then return
+        @target_state = state
+        @emit 'target-state-changed', state
 
     connect: ->
         # Spawn the GDB child process and connect up event handlers
         @child = child_process.spawn @cmdline, ['-n', '--interpreter=mi']
         @child.stdout.on 'data', (data) => @_raw_output_handler(data)
         @child.stderr.on 'data', (data) => @_raw_output_handler(data)
-        @child.on 'exit', @_child_exited
-        @state = 'BUSY'
+        @child.on 'exit', => @_child_exited()
+        @_set_state 'BUSY'
 
     disconnect: ->
         # Politely request the GDB child process to exit
@@ -58,13 +70,15 @@ class GDB extends EventEmitter
         if cls != 'EXEC' then return
         switch rcls
             when 'running'
-                @target_state = 'RUNNING'
+                @emit 'frame-changed', {}
+                @_set_target_state 'RUNNING'
                 @cmdq = []
                 # TODO emit frame-changed with no info
             when 'stopped'
-                @target_state = 'STOPPED'
+                @emit 'frame-changed', results.frame
+                @_set_target_state 'STOPPED'
                 if results.reason.startsWith 'exited'
-                    @target_state = 'EXITED'
+                    @_set_target_state 'EXITED'
 
     _result_record_handler: (cls, results) ->
         console.log "#{cls}: #{JSON.stringify(results)}"
@@ -72,8 +86,9 @@ class GDB extends EventEmitter
     _child_exited: () ->
         # Clean up state if/when GDB child process exits
         console.log 'Child exited'
-        @state = 'DISCONNECTED'
-        @target_state = 'EXITED'
+        @emit 'frame-changed', {}
+        @_set_state 'DISCONNECTED'
+        @_set_target_state 'EXITED'
         delete @child
 
     send_mi: (cmd, result_cb, quiet) ->
@@ -87,10 +102,17 @@ class GDB extends EventEmitter
     _drain_queue: ->
         c = @cmdq.shift()
         if not c?
-            @state = 'IDLE'
+            @_set_state 'IDLE'
             return
         @child.stdin.write c.cmd + '\n'
-        @state = 'BUSY'
+        @_set_state 'BUSY'
+
+    send_cli: (cmd) ->
+        esc_str = ''
+        for c in cmd
+            if c == '"' then c = '\\"'
+            esc_str += c
+        @send_mi "-interpreter-exec console \"#{esc_cmd}\""
 
     start: ->
         @send_mi '-break-insert -t main'
@@ -103,7 +125,7 @@ class GDB extends EventEmitter
 
     interrupt: ->
         # Interrupt the target if running
-        if @state != 'RUNNING' then return
+        if @target_state != 'RUNNING' then return
         @child.kill 'SIGINT'
 
 module.exports = GDB
