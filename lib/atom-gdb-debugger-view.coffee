@@ -1,4 +1,5 @@
 {View} = require 'atom-space-pen-views'
+GdbToolbarView = require './gdb-toolbar-view'
 
 module.exports =
 class AtomGdbDebuggerView extends View
@@ -7,49 +8,15 @@ class AtomGdbDebuggerView extends View
         @gdb.on 'console-output', (stream, text) =>
             @_text_output(text)
 
-        @gdb.on 'state-changed', (state) =>
-            @state.text state
-            if state == 'DISCONNECTED'
-                @disconnect.hide()
-                @connect.show()
-            else
-                @disconnect.show()
-                @connect.hide()
-
-        @gdb.on 'target-state-changed', (state) =>
-            @target_state.text state
-
-        @gdb.on 'frame-changed', (frame) =>
-            if not frame.addr?
-                @frame.text '(no frame)'
-                return
-            fr_text = "#{frame.addr} in #{frame.func}()"
-            if frame.file?
-                fr_text += " (#{frame.file}:#{frame.line})"
-            @frame.text fr_text
-
-    @content: ->
+    @content: (gdb) ->
         @div class: 'gdb-debugger-panel', =>
-            @div =>
-                @div class: 'btn-group', =>
-                    @button class: 'btn icon icon-bug', click: 'do_connect', outlet: 'connect'
-                    @button class: 'btn icon icon-circle-slash', click: 'do_disconnect', outlet: 'disconnect', style: 'display: none'
-                @div class: 'state-display', =>
-                    @span '(no frame)', outlet: 'frame'
-                    @span 'DISCONNECTED', outlet: 'state'
-                    @span 'EXITED', outlet: 'target_state'
+            @subview 'toolbar', new GdbToolbarView(gdb)
             @div class: 'gdb-cli', =>
                 @div class: 'scrolled-window', outlet: 'scrolled_window', =>
                     @pre outlet: 'console'
                 @div class: 'gdb-cli-input', =>
                     @code '(gdb)'
                     @input class: 'native-key-bindings', keypress: 'do_cli', outlet: 'cmd'
-
-    do_connect: ->
-        @console.text ''
-        @gdb.connect()
-
-    do_disconnect: -> @gdb.disconnect()
 
     do_cli: (event) ->
         if event.charCode == 13
