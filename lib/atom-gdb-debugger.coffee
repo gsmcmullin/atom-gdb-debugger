@@ -1,14 +1,31 @@
 AtomGdbDebuggerView = require './atom-gdb-debugger-view'
 {CompositeDisposable} = require 'atom'
+GDB = require './gdb'
 
 module.exports = AtomGdbDebugger =
   atomGdbDebuggerView: null
-  modalPanel: null
+  panel: null
   subscriptions: null
+  gdb: null
+  mark: null
 
-  activate: (state) ->
-    @atomGdbDebuggerView = new AtomGdbDebuggerView(state.atomGdbDebuggerViewState)
-    @modalPanel = atom.workspace.addModalPanel(item: @atomGdbDebuggerView.getElement(), visible: false)
+  activate: () ->
+    @gdb = new GDB('gdb')
+    #@gdb.on 'gdbmi-raw', (data) ->
+    #    console.log data
+    @gdb.on 'frame-changed', (frame) =>
+        if @mark? then @mark.destroy()
+        @mark = null
+        if not frame.fullname? then return
+        atom.workspace.open frame.fullname,
+                activatePane: false
+                initialLine: +frame.line-1
+            .then (editor) =>
+                @mark = editor.markBufferPosition([+frame.line-1, 1])
+                editor.decorateMarker @mark, type: 'line', class: 'gdb-frame'
+
+    @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
+    @panel = atom.workspace.addBottomPanel(item: @atomGdbDebuggerView.get(0), visible: false)
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -17,17 +34,13 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
 
   deactivate: ->
-    @modalPanel.destroy()
+    @panel.destroy()
     @subscriptions.dispose()
     @atomGdbDebuggerView.destroy()
 
-  serialize: ->
-    atomGdbDebuggerViewState: @atomGdbDebuggerView.serialize()
-
   toggle: ->
-    console.log 'AtomGdbDebugger was toggled!'
-
-    if @modalPanel.isVisible()
-      @modalPanel.hide()
+    if @panel.isVisible()
+      @panel.hide()
     else
-      @modalPanel.show()
+      @panel.show()
+      if @gdb.state == 'DISCONNECTED' then @gdb.connect 'gdb'

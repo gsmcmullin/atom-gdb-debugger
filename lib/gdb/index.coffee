@@ -77,7 +77,7 @@ class GDB extends EventEmitter
             when 'stopped'
                 @emit 'frame-changed', results.frame
                 @_set_target_state 'STOPPED'
-                if results.reason.startsWith 'exited'
+                if results.reason? and results.reason.startsWith 'exited'
                     @_set_target_state 'EXITED'
 
     _result_record_handler: (cls, results) ->
@@ -108,10 +108,10 @@ class GDB extends EventEmitter
         @_set_state 'BUSY'
 
     send_cli: (cmd) ->
-        esc_str = ''
+        esc_cmd = ''
         for c in cmd
             if c == '"' then c = '\\"'
-            esc_str += c
+            esc_cmd += c
         @send_mi "-interpreter-exec console \"#{esc_cmd}\""
 
     start: ->
@@ -129,9 +129,3 @@ class GDB extends EventEmitter
         @child.kill 'SIGINT'
 
 module.exports = GDB
-
-gdb = new GDB('gdb')
-gdb.on 'console-output', (stream, data) ->
-    process.stdout.write data
-gdb.connect()
-gdb.disconnect()

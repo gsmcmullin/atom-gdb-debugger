@@ -3,8 +3,7 @@
   "main": "./lib/atom-gdb-debugger",
   "version": "0.0.0",
   "description": "A short description of your package",
-  "keywords": [
-  ],
+  "keywords": [],
   "activationCommands": {
     "atom-workspace": "atom-gdb-debugger:toggle"
   },
@@ -14,5 +13,6 @@
     "atom": ">=1.0.0 <2.0.0"
   },
   "dependencies": {
+    "atom-space-pen-views": "~2.2.0"
   }
 }

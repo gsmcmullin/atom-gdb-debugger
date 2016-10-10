@@ -6,3 +6,46 @@
 
 .atom-gdb-debugger {
 }
+
+.state-display {
+    display:inline-block;
+    float:right;
+}
+.state-display>span {
+    padding: 4px;
+}
+
+.gdb-debugger-panel button {
+    border-color: transparent;
+    background: inherit;
+}
+
+.gdb-debugger-panel input {
+    border-color: transparent;
+    background: inherit;
+    font-family: monospace;
+    padding-left: 4px;
+}
+
+.gdb-cli {
+    padding: 8px;;
+}
+.gdb-cli pre {
+    background: transparent;
+    padding: 0;
+}
+.gdb-cli code {
+    background: transparent;
+    padding: 0;
+}
+
+.gdb-cli .scrolled-window {
+    height: 100px;
+    overflow-y: scroll;
+}
+
+.atom-text-editor, :host, atom-text-editor, atom-text-editor::shadow {
+    .line.gdb-frame {
+        background: darkred;
+    }
+}
