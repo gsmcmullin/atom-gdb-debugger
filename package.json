@@ -14,5 +14,11 @@
   },
   "dependencies": {
     "atom-space-pen-views": "~2.2.0"
+  },
+  "devDependencies": {
+    "jison": "~0.4.17"
+},
+  "scripts": {
+    "prepublish": "jison ./lib/gdb/gdbmi.jison -o ./lib/gdb/gdbmi.js"
   }
 }
