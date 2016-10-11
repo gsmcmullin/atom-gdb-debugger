@@ -25,6 +25,15 @@ class GDB extends EventEmitter
         @target_state = state
         @emit 'target-state-changed', state
 
+    cstr: (s)->
+        esc = ''
+        for c in s
+            switch c
+                when '"' then c = '\\"'
+                when '\\' then c = '\\\\'
+            esc += c
+        return "\"#{esc}\""
+
     connect: ->
         # Spawn the GDB child process and connect up event handlers
         @child = child_process.spawn @cmdline, ['-n', '--interpreter=mi']
@@ -33,9 +42,9 @@ class GDB extends EventEmitter
         @child.on 'exit', => @_child_exited()
         @_set_state 'IDLE'
         if @cwd?
-            @send_mi "-environment-cd \"#{@cwd}\""
+            @send_mi "-environment-cd #{@cstr(@cwd)}"
         if @file?
-            @send_mi "-file-exec-and-symbols \"#{@file}\""
+            @send_mi "-file-exec-and-symbols #{@cstr(@file)}"
         if @init?
             for cmd in @init.split '\n'
                 @send_cli cmd
@@ -116,13 +125,7 @@ class GDB extends EventEmitter
         @_set_state 'BUSY'
 
     send_cli: (cmd) ->
-        esc_cmd = ''
-        for c in cmd
-            switch c
-                when '"' then c = '\\"'
-                when '\\' then c = '\\\\'
-            esc_cmd += c
-        @send_mi "-interpreter-exec console \"#{esc_cmd}\""
+        @send_mi "-interpreter-exec console #{@cstr(cmd)}"
 
     start: ->
         @send_mi '-break-insert -t main'
