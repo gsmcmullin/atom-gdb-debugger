@@ -48,6 +48,7 @@ class GdbToolbarView extends View
     do_connect: -> @gdb.connect()
     do_disconnect: -> @gdb.disconnect()
     do_start: -> @gdb.start()
+    do_continue: -> @gdb.continue()
     do_interrupt: -> @gdb.interrupt()
     do_step: -> @gdb.step()
     do_next: -> @gdb.next()
