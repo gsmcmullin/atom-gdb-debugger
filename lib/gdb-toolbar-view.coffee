@@ -1,4 +1,5 @@
-{View} = require 'atom-space-pen-views'
+{View, $} = require 'atom-space-pen-views'
+ConfigView = require './config-view'
 
 module.exports =
 class GdbToolbarView extends View
@@ -39,6 +40,8 @@ class GdbToolbarView extends View
                 @button 'Next', class: 'btn', click: 'do_next', outlet: 'next'
                 @button 'Step', class: 'btn', click: 'do_step', outlet: 'step'
                 @button 'Finish', class: 'btn', click: 'do_finish', outlet: 'finish'
+            @div class: 'btn-group', =>
+                @button class: 'btn icon icon-tools', click: 'do_config'
 
             @div class: 'state-display', =>
                 @span '(no frame)', outlet: 'frame'
@@ -53,3 +56,6 @@ class GdbToolbarView extends View
     do_step: -> @gdb.step()
     do_next: -> @gdb.next()
     do_finish: -> @gdb.finish()
+
+    do_config: ->
+        new ConfigView(@gdb)

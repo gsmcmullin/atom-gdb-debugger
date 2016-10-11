@@ -12,7 +12,9 @@ module.exports = AtomGdbDebugger =
 
   activate: (state) ->
     @gdb = new GDB(state)
-    @gdb.cmdline = state.cmdline
+    if state.cmdline?
+        @gdb.cmdline = state.cmdline
+    @gdb.cwd = atom.project.getPaths()[0]
     @gdb.file = state.file
     @gdb.init = state.init
     

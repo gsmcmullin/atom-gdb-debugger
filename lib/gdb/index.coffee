@@ -32,8 +32,10 @@ class GDB extends EventEmitter
         @child.stderr.on 'data', (data) => @_raw_output_handler(data)
         @child.on 'exit', => @_child_exited()
         @_set_state 'IDLE'
+        if @cwd?
+            @send_mi "-environment-cd \"#{@cwd}\""
         if @file?
-            @send_mi "-file-exec-and-symbols #{@file}"
+            @send_mi "-file-exec-and-symbols \"#{@file}\""
         if @init?
             for cmd in @init.split '\n'
                 @send_cli cmd
