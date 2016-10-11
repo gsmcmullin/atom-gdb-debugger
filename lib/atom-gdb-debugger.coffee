@@ -1,4 +1,5 @@
 AtomGdbDebuggerView = require './atom-gdb-debugger-view'
+GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
 GDB = require './gdb'
 
@@ -20,6 +21,7 @@ module.exports = AtomGdbDebugger =
         atom.workspace.open frame.fullname,
                 activatePane: false
                 initialLine: +frame.line-1
+                searchAllPanes: true
             .then (editor) =>
                 @mark = editor.markBufferPosition([+frame.line-1, 1])
                 editor.decorateMarker @mark, type: 'line', class: 'gdb-frame'
@@ -32,6 +34,7 @@ module.exports = AtomGdbDebugger =
 
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:mi-log': => @mi_log()
 
   deactivate: ->
     @panel.destroy()
@@ -44,3 +47,9 @@ module.exports = AtomGdbDebugger =
     else
       @panel.show()
       if @gdb.state == 'DISCONNECTED' then @gdb.connect 'gdb'
+
+  mi_log: ->
+    mi_view = new GdbMiView(@gdb)
+    pane = atom.workspace.getActivePane()
+    pane.addItem mi_view
+    pane.activateItem mi_view

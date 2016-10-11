@@ -103,6 +103,7 @@ class GDB extends EventEmitter
         if not c?
             @_set_state 'IDLE'
             return
+        @emit 'gdbmi-raw', c.cmd
         @child.stdin.write c.cmd + '\n'
         @_set_state 'BUSY'
 
