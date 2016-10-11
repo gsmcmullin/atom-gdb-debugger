@@ -15,30 +15,23 @@
     padding: 4px;
 }
 
-.gdb-debugger-panel input {
-    border-color: transparent;
-    background: inherit;
-    font-family: monospace;
-    padding-left: 4px;
-}
-
 .gdb-cli-input {
     white-space: nowrap;
     input {
         width: 100%;
+        border-color: transparent;
+        background: inherit;
+        font-family: monospace;
+        padding-left: 4px;
     }
 }
 
 .gdb-cli {
     padding: 8px;;
-}
-.gdb-cli pre {
-    background: transparent;
-    padding: 0;
-}
-.gdb-cli code {
-    background: transparent;
-    padding: 0;
+    pre, code {
+        background: transparent;
+        padding: 0;
+    }
 }
 
 .gdb-cli .scrolled-window {
