@@ -10,10 +10,12 @@ module.exports = AtomGdbDebugger =
   gdb: null
   mark: null
 
-  activate: () ->
-    @gdb = new GDB('gdb')
-    #@gdb.on 'gdbmi-raw', (data) ->
-    #    console.log data
+  activate: (state) ->
+    @gdb = new GDB(state)
+    @gdb.cmdline = state.cmdline
+    @gdb.file = state.file
+    @gdb.init = state.init
+    
     @gdb.on 'frame-changed', (frame) =>
         if @mark? then @mark.destroy()
         @mark = null
@@ -36,7 +38,13 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:mi-log': => @mi_log()
 
+  serialize: ->
+      cmdline: @gdb.cmdline
+      file: @gdb.file
+      init: @gdb.init
+
   deactivate: ->
+    @gdb.disconnect()
     @panel.destroy()
     @subscriptions.dispose()
     @atomGdbDebuggerView.destroy()

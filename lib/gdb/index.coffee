@@ -10,8 +10,9 @@ class GDB extends EventEmitter
     next_token: 0
     cmdq: []
     partial_line: ''
+    cmdline: 'gdb'
 
-    constructor: (@cmdline) ->
+    constructor: ->
         @parser = new Parser
 
     _set_state: (state) ->
@@ -31,6 +32,11 @@ class GDB extends EventEmitter
         @child.stderr.on 'data', (data) => @_raw_output_handler(data)
         @child.on 'exit', => @_child_exited()
         @_set_state 'IDLE'
+        if @file?
+            @send_mi "-file-exec-and-symbols #{@file}"
+        if @init?
+            for cmd in @init.split '\n'
+                @send_cli cmd
 
     disconnect: ->
         # Politely request the GDB child process to exit
