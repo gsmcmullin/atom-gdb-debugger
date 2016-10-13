@@ -1,11 +1,15 @@
-{View} = require 'atom-space-pen-views'
+{View, $} = require 'atom-space-pen-views'
 
 module.exports =
 class GdbCliView extends View
     initialize: (gdb) ->
         @gdb = gdb
         @gdb.on 'console-output', (stream, text) =>
-            @_text_output(text)
+            switch stream
+                when 'LOG' then cls = 'text-error'
+                when 'TARGET' then cls = 'text-info'
+            @_text_output(text, cls)
+
 
     @content: (gdb) ->
         @div class: 'gdb-cli', =>
@@ -19,10 +23,13 @@ class GdbCliView extends View
         if event.charCode == 13
             cmd = @cmd.val()
             @cmd.val ''
-            @_text_output "(gdb) #{cmd}\n"
+            @_text_output "(gdb) "
+            @_text_output cmd + '\n', 'text-highlight'
             @gdb.send_cli cmd
 
-    _text_output: (text) ->
+    _text_output: (text, cls) ->
         text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        @console.append(text)
+        if cls?
+            text = "<span class='#{cls}'>#{text}</span>"
+        @console.append text
         @scrolled_window.prop 'scrollTop', @console.height() - @scrolled_window.height()
