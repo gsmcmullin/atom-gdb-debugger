@@ -4,7 +4,7 @@ module.exports =
 class GdbMiView extends View
     initialize: (gdb) ->
         @gdb = gdb
-        @gdb.on 'gdbmi-raw', (data) =>
+        @gdb.onGdbmiRaw (data) =>
             @_text_output(data)
 
     @content: (gdb) ->

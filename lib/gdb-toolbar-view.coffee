@@ -5,7 +5,7 @@ module.exports =
 class GdbToolbarView extends View
     initialize: (gdb) ->
         @gdb = gdb
-        @gdb.on 'state-changed', (state) =>
+        @gdb.onStateChanged (state) =>
             @state.text state
             if state == 'DISCONNECTED'
                 @disconnect.hide()
@@ -14,11 +14,10 @@ class GdbToolbarView extends View
                 @disconnect.show()
                 @connect.hide()
 
-        @gdb.on 'target-state-changed', (state) =>
+        @gdb.onTargetStateChanged (state) =>
             @target_state.text state
 
-        @gdb.on 'frame-changed', (frame) =>
-            console.log frame
+        @gdb.onFrameChanged (frame) =>
             if not frame.addr?
                 @frame.text '(no frame)'
                 return

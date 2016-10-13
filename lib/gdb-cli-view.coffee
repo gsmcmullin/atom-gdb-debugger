@@ -4,12 +4,11 @@ module.exports =
 class GdbCliView extends View
     initialize: (gdb) ->
         @gdb = gdb
-        @gdb.on 'console-output', (stream, text) =>
+        @gdb.onConsoleOutput ([stream, text]) =>
             switch stream
                 when 'LOG' then cls = 'text-error'
                 when 'TARGET' then cls = 'text-info'
             @_text_output(text, cls)
-
 
     @content: (gdb) ->
         @div class: 'gdb-cli', =>

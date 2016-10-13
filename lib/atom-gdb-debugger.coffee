@@ -17,8 +17,14 @@ module.exports = AtomGdbDebugger =
     @gdb.cwd = atom.project.getPaths()[0]
     @gdb.file = state.file
     @gdb.init = state.init
-    
-    @gdb.on 'frame-changed', (frame) =>
+
+    @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
+    @panel = atom.workspace.addBottomPanel(item: @atomGdbDebuggerView.get(0), visible: false)
+
+    # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
+    @subscriptions = new CompositeDisposable
+
+    @subscriptions.add @gdb.onFrameChanged (frame) =>
         if @mark? then @mark.destroy()
         @mark = null
         if not frame.fullname? then return
@@ -29,12 +35,6 @@ module.exports = AtomGdbDebugger =
             .then (editor) =>
                 @mark = editor.markBufferPosition([+frame.line-1, 1])
                 editor.decorateMarker @mark, type: 'line', class: 'gdb-frame'
-
-    @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
-    @panel = atom.workspace.addBottomPanel(item: @atomGdbDebuggerView.get(0), visible: false)
-
-    # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
-    @subscriptions = new CompositeDisposable
 
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
