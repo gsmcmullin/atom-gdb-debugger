@@ -1,5 +1,4 @@
-child_process = require 'child_process'
-{Emitter} = require 'atom'
+{Emitter, BufferedProcess} = require 'atom'
 {Parser} = require './gdbmi.js'
 
 class GDB
@@ -8,7 +7,6 @@ class GDB
     child: null
     next_token: 0
     cmdq: []
-    partial_line: ''
     cmdline: 'gdb'
 
     constructor: ->
@@ -47,10 +45,12 @@ class GDB
 
     connect: ->
         # Spawn the GDB child process and connect up event handlers
-        @child = child_process.spawn @cmdline, ['-n', '--interpreter=mi']
-        @child.stdout.on 'data', (data) => @_raw_output_handler(data)
-        @child.stderr.on 'data', (data) => @_raw_output_handler(data)
-        @child.on 'exit', => @_child_exited()
+        @child = new BufferedProcess
+            command: @cmdline
+            args: ['-n', '--interpreter=mi']
+            stdout: @_raw_output_handler.bind(this)
+            stderr: @_raw_output_handler.bind(this)
+            exit: @_child_exited.bind(this)
         @_set_state 'IDLE'
         if @cwd?
             @send_mi "-environment-cd #{@cstr(@cwd)}"
@@ -69,11 +69,7 @@ class GDB
         @send_mi '-gdb-exit'
 
     _raw_output_handler: (data) ->
-        # Split lines and keep patial line for next time
-        data = @partial_line + data.toString()
-        lines = data.split '\n'
-        @partial_line = lines.slice(-1)
-        lines = lines.slice 0, -1
+        lines = data.split('\n').slice(0, -1)
         for line in lines
             @_line_output_handler line
 
@@ -138,7 +134,7 @@ class GDB
             @_set_state 'IDLE'
             return
         @emitter.emit 'gdbmi-raw', c.cmd
-        @child.stdin.write c.cmd + '\n'
+        @child.process.stdin.write c.cmd + '\n'
         @_set_state 'BUSY'
 
     _flush_queue: ->
