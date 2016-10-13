@@ -24,7 +24,7 @@ module.exports = AtomGdbDebugger =
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
 
-    @subscriptions.add @gdb.onFrameChanged (frame) =>
+    @subscriptions.add @gdb.exec.onFrameChanged (frame) =>
         if @mark? then @mark.destroy()
         @mark = null
         if not frame.fullname? then return
@@ -32,6 +32,7 @@ module.exports = AtomGdbDebugger =
                 activatePane: false
                 initialLine: +frame.line-1
                 searchAllPanes: true
+                pending: true
             .then (editor) =>
                 @mark = editor.markBufferPosition([+frame.line-1, 1])
                 editor.decorateMarker @mark, type: 'line', class: 'gdb-frame'

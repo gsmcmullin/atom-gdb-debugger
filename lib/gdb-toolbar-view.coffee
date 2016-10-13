@@ -14,10 +14,10 @@ class GdbToolbarView extends View
                 @disconnect.show()
                 @connect.hide()
 
-        @gdb.onTargetStateChanged (state) =>
+        @gdb.exec.onStateChanged (state) =>
             @target_state.text state
 
-        @gdb.onFrameChanged (frame) =>
+        @gdb.exec.onFrameChanged (frame) =>
             if not frame.addr?
                 @frame.text '(no frame)'
                 return
@@ -49,12 +49,13 @@ class GdbToolbarView extends View
 
     do_connect: -> @gdb.connect()
     do_disconnect: -> @gdb.disconnect()
-    do_start: -> @gdb.start()
-    do_continue: -> @gdb.continue()
-    do_interrupt: -> @gdb.interrupt()
-    do_step: -> @gdb.step()
-    do_next: -> @gdb.next()
-    do_finish: -> @gdb.finish()
+
+    do_start: -> @gdb.exec.start()
+    do_continue: -> @gdb.exec.continue()
+    do_interrupt: -> @gdb.exec.interrupt()
+    do_step: -> @gdb.exec.step()
+    do_next: -> @gdb.exec.next()
+    do_finish: -> @gdb.exec.finish()
 
     do_config: ->
         new ConfigView(@gdb)

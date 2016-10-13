@@ -1,9 +1,9 @@
 {Emitter, BufferedProcess} = require 'atom'
 {Parser} = require './gdbmi.js'
+Exec = require './exec'
 
 class GDB
     state: 'DISCONNECTED'
-    target_state: 'EXITED'
     child: null
     next_token: 0
     cmdq: []
@@ -12,6 +12,7 @@ class GDB
     constructor: ->
         @parser = new Parser
         @emitter = new Emitter
+        @exec = new Exec(this)
 
     onConsoleOutput: (cb) ->
         @emitter.on 'console-output', cb
@@ -19,20 +20,18 @@ class GDB
         @emitter.on 'gdbmi-raw', cb
     onStateChanged: (cb) ->
         @emitter.on 'state-changed', cb
-    onTargetStateChanged: (cb) ->
-        @emitter.on 'target-state-changed', cb
-    onFrameChanged: (cb) ->
-        @emitter.on 'frame-changed', cb
+
+    onAsyncExec: (cb) ->
+        @emitter.on 'async-exec', cb
+    onAsyncNotify: (cb) ->
+        @emitter.on 'async-notify', cb
+    onAsyncStatus: (cb) ->
+        @emitter.on 'async-statuc', cb
 
     _set_state: (state) ->
         if state == @state then return
         @state = state
         @emitter.emit 'state-changed', state
-
-    _set_target_state: (state) ->
-        if state == @target_state then return
-        @target_state = state
-        @emitter.emit 'target-state-changed', state
 
     cstr: (s)->
         esc = ''
@@ -63,8 +62,8 @@ class GDB
     disconnect: ->
         # Politely request the GDB child process to exit
         # First interrupt the target if it's running
-        if @state == 'DISCONNECTED' then return
-        if @target_state == 'RUNNING'
+        if not @child? then return
+        if @exec.state == 'RUNNING'
             @interrupt()
         @send_mi '-gdb-exit'
 
@@ -85,22 +84,8 @@ class GDB
             when 'RESULT' then @_result_record_handler r.cls, r.results
 
     _async_record_handler: (cls, rcls, results) ->
-        #console.log "#{cls} (#{rcls}): #{JSON.stringify(results)}"
-        signal = 'gdbmi-' + cls.toLowerCase()
-        @emitter.emit signal, results
-
-        if cls != 'EXEC' then return
-        switch rcls
-            when 'running'
-                @emitter.emit 'frame-changed', {}
-                @_set_target_state 'RUNNING'
-                @cmdq = []
-                # TODO emit frame-changed with no info
-            when 'stopped'
-                @emitter.emit 'frame-changed', results.frame
-                @_set_target_state 'STOPPED'
-                if results.reason? and results.reason.startsWith 'exited'
-                    @_set_target_state 'EXITED'
+        signal = 'async-' + cls.toLowerCase()
+        @emitter.emit signal, [rcls, results]
 
     _result_record_handler: (cls, results) ->
         c = @cmdq.shift()
@@ -114,13 +99,14 @@ class GDB
     _child_exited: () ->
         # Clean up state if/when GDB child process exits
         console.log 'Child exited'
-        @emitter.emit 'frame-changed', {}
+        @_flush_queue()
         @_set_state 'DISCONNECTED'
-        @_set_target_state 'EXITED'
         delete @child
 
     send_mi: (cmd, quiet) ->
         # Send an MI command to GDB
+        if not @child?
+            return Promise.reject 'Not connected'
         new Promise (resolve, reject) =>
             cmd = @next_token + cmd
             @next_token += 1
@@ -145,19 +131,5 @@ class GDB
 
     send_cli: (cmd) ->
         @send_mi "-interpreter-exec console #{@cstr(cmd)}"
-
-    start: ->
-        @send_mi '-break-insert -t main'
-        @send_mi '-exec-run'
-
-    continue: -> @send_mi '-exec-continue'
-    next: -> @send_mi '-exec-next'
-    step: -> @send_mi '-exec-step'
-    finish: -> @send_mi '-exec-finish'
-
-    interrupt: ->
-        # Interrupt the target if running
-        if @target_state != 'RUNNING' then return
-        @child.kill 'SIGINT'
 
 module.exports = GDB
