@@ -1,4 +1,4 @@
-{View, TextEditorView} = require 'atom-space-pen-views'
+{View} = require 'atom-space-pen-views'
 
 module.exports =
 class ConfigView extends View
@@ -13,22 +13,22 @@ class ConfigView extends View
 
     @content: (gdb) ->
         @div =>
-            @div "GDB binary:"
-            @input class: 'input-text native-key-bindings', outlet: 'cmdline'
-            #@subview 'cmdline', new TextEditorView(mini: true)
-            @div "Target binary:"
-            @input class: 'input-text native-key-bindings', outlet: 'file'
-            #@subview 'file', new TextEditorView(mini: true)
-            @div "GDB init commands:"
-            @textarea class: 'input-textarea native-key-bindings', outlet: 'init'
+            @div class: 'block', =>
+                @label "GDB binary:"
+                @input class: 'input-text native-key-bindings', outlet: 'cmdline'
+            @div class: 'block', =>
+                @label "Target binary:"
+                @input class: 'input-text native-key-bindings', outlet: 'file'
+            @div class: 'block', =>
+                @div "GDB init commands:"
+                @textarea class: 'input-textarea native-key-bindings', outlet: 'init'
 
-            #@subview 'init', new TextEditorView()
-            @button 'Cancel', class: 'btn', click: 'do_close'
-            @button 'OK', class: 'btn', click: 'do_ok'
+            @div class: 'block', =>
+                @button 'Cancel', class: 'btn inline-block', click: 'do_close'
+                @button 'OK', class: 'btn inline-block', click: 'do_ok'
 
     do_close: ->
         @panel.destroy()
-        #atom.workspace.panelForItem(this.get(0)).hide()
 
     do_ok: ->
         @gdb.cmdline = @cmdline.val()
