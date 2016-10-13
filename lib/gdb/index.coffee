@@ -77,7 +77,10 @@ class GDB
     _line_output_handler: (line) ->
         # Handle line buffered output from GDB child process
         @emitter.emit 'gdbmi-raw', line
-        r = @parser.parse line
+        try
+            r = @parser.parse line
+        catch err
+            @emitter.emit 'console-output', ['CONSOLE', line]
         if not r? then return
         @emitter.emit 'gdbmi-ast', r
         switch r.type
