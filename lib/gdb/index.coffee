@@ -52,6 +52,10 @@ class GDB
             stdout: @_raw_output_handler.bind(this)
             stderr: @_raw_output_handler.bind(this)
             exit: @_child_exited.bind(this)
+        @child.onWillThrowError (x) =>
+            @emitter.emit 'console-output', ['LOG', x.error.toString()+'\n']
+            @_child_exited()
+            x.handle()
         @_set_state 'IDLE'
         if @cwd?
             @send_mi "-environment-cd #{@cstr(@cwd)}"
