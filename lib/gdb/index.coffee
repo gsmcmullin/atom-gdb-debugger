@@ -96,7 +96,12 @@ class GDB extends EventEmitter
                     @_set_target_state 'EXITED'
 
     _result_record_handler: (cls, results) ->
-        console.log "#{cls}: #{JSON.stringify(results)}"
+        c = @cmdq.shift()
+        if cls == 'error'
+            c.reject results.msg
+            @_flush_queue()
+            return
+        c.resolve results
         @_drain_queue()
 
     _child_exited: () ->
@@ -107,22 +112,29 @@ class GDB extends EventEmitter
         @_set_target_state 'EXITED'
         delete @child
 
-    send_mi: (cmd, result_cb, quiet) ->
+    send_mi: (cmd, quiet) ->
         # Send an MI command to GDB
-        cmd = @next_token + cmd
-        @next_token += 1
-        @cmdq.push {quiet: quiet, cmd: cmd, cb:result_cb}
-        if @state == 'IDLE'
-            @_drain_queue()
+        new Promise (resolve, reject) =>
+            cmd = @next_token + cmd
+            @next_token += 1
+            @cmdq.push {quiet: quiet, cmd: cmd, resolve:resolve, reject: reject}
+            if @state == 'IDLE'
+                @_drain_queue()
 
     _drain_queue: ->
-        c = @cmdq.shift()
+        c = @cmdq[0]
         if not c?
             @_set_state 'IDLE'
             return
         @emit 'gdbmi-raw', c.cmd
         @child.stdin.write c.cmd + '\n'
         @_set_state 'BUSY'
+
+    _flush_queue: ->
+        for c in @cmdq
+            c.reject 'Flushed due to previous errors'
+        @cmdq = []
+        @_set_state 'IDLE'
 
     send_cli: (cmd) ->
         @send_mi "-interpreter-exec console #{@cstr(cmd)}"
