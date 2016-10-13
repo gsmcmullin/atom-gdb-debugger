@@ -1,6 +1,7 @@
 {Emitter, BufferedProcess} = require 'atom'
 {Parser} = require './gdbmi.js'
 Exec = require './exec'
+Breaks = require './breaks'
 
 class GDB
     state: 'DISCONNECTED'
@@ -13,6 +14,7 @@ class GDB
         @parser = new Parser
         @emitter = new Emitter
         @exec = new Exec(this)
+        @breaks = new Breaks(this)
 
     onConsoleOutput: (cb) ->
         @emitter.on 'console-output', cb
