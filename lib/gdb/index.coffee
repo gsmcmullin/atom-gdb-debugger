@@ -80,7 +80,7 @@ class GDB
         try
             r = @parser.parse line
         catch err
-            @emitter.emit 'console-output', ['CONSOLE', line]
+            @emitter.emit 'console-output', ['CONSOLE', line + '\n']
         if not r? then return
         @emitter.emit 'gdbmi-ast', r
         switch r.type
