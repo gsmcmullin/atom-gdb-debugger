@@ -66,7 +66,7 @@ class GDB
         # First interrupt the target if it's running
         if not @child? then return
         if @exec.state == 'RUNNING'
-            @interrupt()
+            @exec.interrupt()
         @send_mi '-gdb-exit'
 
     _raw_output_handler: (data) ->
