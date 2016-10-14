@@ -8,6 +8,7 @@ class Breaks
         @emitter = new Emitter
         @subscriptions = new CompositeDisposable
         @subscriptions.add @gdb.onAsyncNotify(@_onNotify.bind(this))
+        @subscriptions.add @gdb.onStateChanged(@_onStateChanged.bind(this))
         @observe @_selfObserve.bind(this)
 
     observe: (cb) ->
@@ -29,6 +30,12 @@ class Breaks
                 @_notifyObservers results.bkpt.number, results.bkpt
             when 'breakpoint-modified'
                 @_notifyObservers results.bkpt.number, results.bkpt
+
+    _onStateChanged: (state) ->
+        if state == 'DISCONNECTED'
+            for id, bkpt of @breaks
+                @_notifyObservers id
+            @breaks = {}
 
     _selfObserve: (id, bkpt) ->
         if not bkpt?

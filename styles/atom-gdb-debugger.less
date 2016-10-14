@@ -3,6 +3,7 @@
 // See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
 // for a full listing of what's available.
 @import "ui-variables";
+@import "octicon-utf-codes.less";
 
 .atom-gdb-debugger {
 }
@@ -44,6 +45,15 @@
 
 .atom-text-editor, :host, atom-text-editor, atom-text-editor::shadow {
     .line.gdb-frame {
-        background: @ui-site-color-1;
+        background: @background-color-highlight;
+    }
+
+    .line-number.gdb-bkpt .icon-right {
+    visibility: visible;
+
+        &:before {
+            content: @stop;
+            color: @text-color-highlight;
+        }
     }
 }

@@ -2,6 +2,23 @@ AtomGdbDebuggerView = require './atom-gdb-debugger-view'
 GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
 GDB = require './gdb'
+fs = require 'fs'
+
+decorate = (file, line, decoration) ->
+    line = +line-1
+    new Promise (resolve, reject) ->
+            fs.access file, fs.R_OK, (err) ->
+                if err then reject(err) else resolve()
+        .then () ->
+            atom.workspace.open file,
+                activatePane: false
+                initialLine: line
+                searchAllPanes: true
+                pending: true
+        .then (editor) ->
+            mark = editor.markBufferPosition([line, 1])
+            editor.decorateMarker mark, decoration
+            mark
 
 module.exports = AtomGdbDebugger =
   atomGdbDebuggerView: null
@@ -9,6 +26,7 @@ module.exports = AtomGdbDebugger =
   subscriptions: null
   gdb: null
   mark: null
+  breakMarks: {}
 
   activate: (state) ->
     @gdb = new GDB(state)
@@ -28,14 +46,19 @@ module.exports = AtomGdbDebugger =
         if @mark? then @mark.destroy()
         @mark = null
         if not frame.fullname? then return
-        atom.workspace.open frame.fullname,
-                activatePane: false
-                initialLine: +frame.line-1
-                searchAllPanes: true
-                pending: true
-            .then (editor) =>
-                @mark = editor.markBufferPosition([+frame.line-1, 1])
-                editor.decorateMarker @mark, type: 'line', class: 'gdb-frame'
+        decorate frame.fullname, frame.line, type: 'line', class: 'gdb-frame'
+            .then (mark) => @mark = mark
+            .catch () ->
+
+    @subscriptions.add @gdb.breaks.observe (id, bkpt) =>
+        if @breakMarks[id]?
+            @breakMarks[id].then (mark) =>
+                    mark.destroy()
+                .catch () ->
+            delete @breakMarks[id]
+        if not bkpt? or not bkpt.fullname? then return
+        @breakMarks[id] = decorate bkpt.fullname, bkpt.line,
+                type: 'line-number', class: 'gdb-bkpt'
 
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
