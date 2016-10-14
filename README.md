@@ -23,3 +23,20 @@ stop by the Gitter channel and let us know what you think.
 * `F11` Single step, into function calls (`step`)
 * `Shift-F11` Resume until return  of current function (`finish`)
 * `Ctrl-K B` Show stack backtrace
+
+## Installation
+
+Atom Package: https://atom.io/packages/atom-gdb-debugger
+
+```bash
+apm install atom-gdb-debugger
+```
+
+Or Settings/Preferences ➔ Packages ➔ Search for `atom-gdb-debugger`
+
+For development you can also clone the repository directly and install it via:
+```bash
+apm install
+apm link .
+```
+
