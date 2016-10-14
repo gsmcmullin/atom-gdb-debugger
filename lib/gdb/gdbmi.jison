@@ -93,7 +93,7 @@ result_list
         {
             $$ = $1;
             if ($3.key in $$) {
-                if ($$[$3.key].constuctor == Array)
+                if ($$[$3.key].constructor == Array)
                     $$[$3.key].push($3.value);
                 else
                     $$[$3.key] = [$$[$3.key], $3.value];
