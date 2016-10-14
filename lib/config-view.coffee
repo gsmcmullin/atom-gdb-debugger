@@ -34,4 +34,5 @@ class ConfigView extends View
         @gdb.cmdline = @cmdline.val()
         @gdb.file = @file.val()
         @gdb.init = @init.val()
+        @gdb.connect()
         @panel.destroy()

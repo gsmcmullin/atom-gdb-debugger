@@ -70,7 +70,10 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:configure': =>
         new ConfigView(@gdb)
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:connect': =>
-        @gdb.connect()
+        if not @gdb.file? or @gdb.file == ''
+            new ConfigView(@gdb)
+        else
+            @gdb.connect()
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:continue': =>
         @gdb.exec.continue()

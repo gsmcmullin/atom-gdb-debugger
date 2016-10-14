@@ -45,6 +45,7 @@ class GDB
         return "\"#{esc}\""
 
     connect: ->
+        if @child? then @child.kill()
         # Spawn the GDB child process and connect up event handlers
         @child = new BufferedProcess
             command: @cmdline
