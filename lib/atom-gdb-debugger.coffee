@@ -3,6 +3,7 @@ GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
 GDB = require './gdb'
 fs = require 'fs'
+BacktraceView = require './backtrace-view'
 
 decorate = (file, line, decoration) ->
     line = +line-1
@@ -63,6 +64,8 @@ module.exports = AtomGdbDebugger =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:mi-log': => @mi_log()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:debug-backtrace': =>
+        new BacktraceView(@gdb)
 
   serialize: ->
       cmdline: @gdb.cmdline

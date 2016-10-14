@@ -28,6 +28,17 @@ class Exec
         if @state != 'RUNNING' then return
         @gdb.child.process.kill 'SIGINT'
 
+    backtrace: () ->
+        @gdb.send_mi '-stack-list-frames'
+            .then (result) ->
+                return result.stack.frame
+
+    selectFrame: (level) ->
+        @gdb.send_mi "-stack-select-frame #{level}"
+        @gdb.send_mi "-stack-info-frame"
+            .then (result) =>
+                @emitter.emit 'frame-changed', result.frame
+
     _setState: (state) ->
         if state == @state then return
         @state = state
