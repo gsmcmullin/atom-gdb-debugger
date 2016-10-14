@@ -15,7 +15,7 @@ class GdbCliView extends View
             @div class: 'scrolled-window', outlet: 'scrolled_window', =>
                 @pre outlet: 'console'
             @div class: 'gdb-cli-input', =>
-                @code '(gdb)'
+                @pre '(gdb)'
                 @input class: 'native-key-bindings', keypress: 'do_cli', outlet: 'cmd'
 
     do_cli: (event) ->
