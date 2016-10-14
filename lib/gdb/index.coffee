@@ -20,20 +20,13 @@ class GDB
         @emitter.on 'console-output', cb
     onGdbmiRaw: (cb) ->
         @emitter.on 'gdbmi-raw', cb
-    onStateChanged: (cb) ->
-        @emitter.on 'state-changed', cb
 
     onAsyncExec: (cb) ->
         @emitter.on 'async-exec', cb
     onAsyncNotify: (cb) ->
         @emitter.on 'async-notify', cb
     onAsyncStatus: (cb) ->
-        @emitter.on 'async-statuc', cb
-
-    _set_state: (state) ->
-        if state == @state then return
-        @state = state
-        @emitter.emit 'state-changed', state
+        @emitter.on 'async-status', cb
 
     cstr: (s)->
         esc = ''
@@ -57,7 +50,7 @@ class GDB
             @emitter.emit 'console-output', ['LOG', x.error.toString()+'\n']
             @_child_exited()
             x.handle()
-        @_set_state 'IDLE'
+        @exec._connected()
         if @cwd?
             @send_mi "-environment-cd #{@cstr(@cwd)}"
         if @file?
@@ -109,8 +102,8 @@ class GDB
     _child_exited: () ->
         # Clean up state if/when GDB child process exits
         console.log 'Child exited'
+        @exec._disconnected()
         @_flush_queue()
-        @_set_state 'DISCONNECTED'
         delete @child
 
     send_mi: (cmd, quiet) ->
@@ -121,23 +114,19 @@ class GDB
             cmd = @next_token + cmd
             @next_token += 1
             @cmdq.push {quiet: quiet, cmd: cmd, resolve:resolve, reject: reject}
-            if @state == 'IDLE'
+            if @cmdq.length == 1
                 @_drain_queue()
 
     _drain_queue: ->
         c = @cmdq[0]
-        if not c?
-            @_set_state 'IDLE'
-            return
+        if not c? then return
         @emitter.emit 'gdbmi-raw', c.cmd
         @child.process.stdin.write c.cmd + '\n'
-        @_set_state 'BUSY'
 
     _flush_queue: ->
         for c in @cmdq
             c.reject 'Flushed due to previous errors'
         @cmdq = []
-        @_set_state 'IDLE'
 
     send_cli: (cmd) ->
         @send_mi "-interpreter-exec console #{@cstr(cmd)}"

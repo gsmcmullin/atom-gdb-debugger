@@ -1,7 +1,7 @@
 {Emitter, CompositeDisposable} = require 'atom'
 
 class Exec
-    state: 'EXITED'
+    state: 'DISCONNECTD'
 
     constructor: (@gdb) ->
         @emitter = new Emitter
@@ -11,8 +11,6 @@ class Exec
 
     onStateChanged: (cb) ->
         @emitter.on 'state-changed', cb
-    onFrameChanged: (cb) ->
-        @emitter.on 'frame-changed', cb
 
     start: ->
         @gdb.send_mi '-break-insert -t main'
@@ -36,32 +34,33 @@ class Exec
     selectFrame: (level) ->
         @gdb.send_mi "-stack-select-frame #{level}"
         @gdb.send_mi "-stack-info-frame"
-            .then (result) =>
-                @emitter.emit 'frame-changed', result.frame
+            .then ({frame}) =>
+                @_setState @state, frame
 
-    _setState: (state) ->
-        if state == @state then return
+    _setState: (state, frame) ->
         @state = state
-        @emitter.emit 'state-changed', state
+        @emitter.emit 'state-changed', [state, frame]
 
-    _onExec: ([cls, results]) ->
+    _onExec: ([cls, {reason, frame}]) ->
         switch cls
             when 'running'
-                @emitter.emit 'frame-changed', {}
                 @_setState 'RUNNING'
             when 'stopped'
-                @emitter.emit 'frame-changed', results.frame or {}
-                @_setState 'STOPPED'
-                if results.reason? and results.reason.startsWith 'exited'
+                @_setState 'STOPPED', frame
+                if reason? and reason.startsWith 'exited'
                     @_setState 'EXITED'
 
     _onNotify: ([cls, results]) ->
         switch cls
             when 'thread-exited'
-                @emitter.emit 'frame-changed', {}
                 @_setState 'EXITED'
             when 'thread-selected'
                 if @state == 'RUNNING'
                     @_setState 'STOPPED'
+
+    _connected: ->
+        @_setState 'EXITED'
+    _disconnected: ->
+        @_setState 'DISCONNECTED'
 
 module.exports = Exec

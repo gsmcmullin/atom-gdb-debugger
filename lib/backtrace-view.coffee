@@ -1,10 +1,5 @@
 {SelectListView, $$} = require 'atom-space-pen-views'
-
-format = ({level, addr, func, file, line}) ->
-    fmt = "##{level}  #{addr} in #{func} ()"
-    if file?
-        fmt += " at #{file}:#{line}"
-    return fmt
+{formatFrame} = require './utils'
 
 module.exports =
 class BacktraceView extends SelectListView
@@ -22,7 +17,7 @@ class BacktraceView extends SelectListView
     getFilterKey: () -> 'func'
 
     viewForItem: (item) ->
-        "<li>#{format(item)}</li>"
+        "<li>#{formatFrame(item)}</li>"
 
     cancel: ->
         @panel.destroy()

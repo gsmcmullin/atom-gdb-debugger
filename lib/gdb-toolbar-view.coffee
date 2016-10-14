@@ -1,30 +1,12 @@
 {View, $} = require 'atom-space-pen-views'
 ConfigView = require './config-view'
+{formatFrame} = require './utils'
 
 module.exports =
 class GdbToolbarView extends View
     initialize: (gdb) ->
         @gdb = gdb
-        @gdb.onStateChanged (state) =>
-            @state.text state
-            if state == 'DISCONNECTED'
-                @disconnect.hide()
-                @connect.show()
-            else
-                @disconnect.show()
-                @connect.hide()
-
-        @gdb.exec.onStateChanged (state) =>
-            @target_state.text state
-
-        @gdb.exec.onFrameChanged (frame) =>
-            if not frame.addr?
-                @frame.text '(no frame)'
-                return
-            fr_text = "#{frame.addr} in #{frame.func}()"
-            if frame.file?
-                fr_text += " (#{frame.file}:#{frame.line})"
-            @frame.text fr_text
+        @gdb.exec.onStateChanged @_onStateChanged.bind(this)
 
     @content: ->
         @div class: 'btn-toolbar', =>
@@ -43,9 +25,7 @@ class GdbToolbarView extends View
                 @button class: 'btn icon icon-tools', click: 'do_config'
 
             @div class: 'state-display', =>
-                @span '(no frame)', outlet: 'frame'
                 @span 'DISCONNECTED', outlet: 'state'
-                @span 'EXITED', outlet: 'target_state'
 
     do_connect: -> @gdb.connect()
     do_disconnect: -> @gdb.disconnect()
@@ -56,6 +36,28 @@ class GdbToolbarView extends View
     do_step: -> @gdb.exec.step()
     do_next: -> @gdb.exec.next()
     do_finish: -> @gdb.exec.finish()
+
+    _onStateChanged: ([state, frame]) ->
+        if state == 'DISCONNECTED'
+            @disconnect.hide()
+            @connect.show()
+        else
+            @disconnect.show()
+            @connect.hide()
+
+        switch state
+            when 'DISCONNECTED' then cls = 'text-error'
+            when 'EXITED' then cls = 'text-warning'
+            when 'STOPPED' then cls = 'text-info'
+            when 'RUNNING' then cls = 'text-success'
+
+        @state.removeClass()
+        if frame?
+            console.log formatFrame(frame)
+            @state.text formatFrame(frame)
+        else
+            @state.text state
+        @state.addClass cls
 
     do_config: ->
         new ConfigView(@gdb)
