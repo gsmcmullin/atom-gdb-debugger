@@ -50,7 +50,7 @@ class Exec
                 @emitter.emit 'frame-changed', {}
                 @_setState 'RUNNING'
             when 'stopped'
-                @emitter.emit 'frame-changed', results.frame
+                @emitter.emit 'frame-changed', results.frame or {}
                 @_setState 'STOPPED'
                 if results.reason? and results.reason.startsWith 'exited'
                     @_setState 'EXITED'
