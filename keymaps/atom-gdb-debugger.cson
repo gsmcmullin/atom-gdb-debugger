@@ -10,10 +10,10 @@
 'atom-workspace':
   'ctrl-alt-o': 'atom-gdb-debugger:connect'
   'f5': 'atom-gdb-debugger:continue'
-  'f11': 'atom-gdb-debugger:step'
-  'shift-f11': 'atom-gdb-debugger:next'
-  'f10': 'atom-gdb-debugger:finish'
   'shift-f5': 'atom-gdb-debugger:interrupt'
+  'f10': 'atom-gdb-debugger:next'
+  'f11': 'atom-gdb-debugger:step'
+  'shift-f11': 'atom-gdb-debugger:finish'
   'ctrl-k b': 'atom-gdb-debugger:backtrace'
 'atom-text-editor':
   'f9': 'atom-gdb-debugger:toggle-breakpoint'

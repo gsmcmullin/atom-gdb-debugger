@@ -82,9 +82,9 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:next': =>
         @gdb.exec.next()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:finish': =>
-        @gdb.exec.next()
+        @gdb.exec.finish()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:interrupt': =>
-        @gdb.exec.next()
+        @gdb.exec.interrupt()
 
     @subscriptions.add atom.commands.add 'atom-text-editor', 'atom-gdb-debugger:toggle-breakpoint': (ev) =>
         editor = ev.target.component.editor
@@ -96,7 +96,7 @@ module.exports = AtomGdbDebugger =
         new BacktraceView(@gdb)
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-panel': => @toggle()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-mi-log': => @mi_log()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:open-mi-log': => @mi_log()
 
   serialize: ->
       cmdline: @gdb.cmdline
