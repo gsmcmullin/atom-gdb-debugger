@@ -3,7 +3,7 @@
   "main": "./lib/atom-gdb-debugger",
   "version": "0.1.2",
   "description": "GDB integration for Atom",
-  "keywords": [],
+  "keywords": ["gdb", "debug", "debugger"],
   "activationCommands": {
     "atom-workspace": [
       "atom-gdb-debugger:connect",
@@ -11,7 +11,7 @@
     ]
   },
   "repository": "https://github.com/gsmcmullin/atom-gdb-debugger",
-  "license": "GPLv3",
+  "license": "GPL-3.0+",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"
   },
