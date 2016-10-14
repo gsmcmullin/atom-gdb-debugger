@@ -6,8 +6,16 @@
       'label': 'GDB Debugger'
       'submenu': [
         {
-          'label': 'Toggle'
-          'command': 'atom-gdb-debugger:toggle'
+          'label': 'Configure'
+          'command': 'atom-gdb-debugger:configure'
+        },
+        {
+          'label': 'Connect'
+          'command': 'atom-gdb-debugger:connect'
+        },
+        {
+          'label': 'Toggle Panel'
+          'command': 'atom-gdb-debugger:toggle-panel'
         }
       ]
     ]

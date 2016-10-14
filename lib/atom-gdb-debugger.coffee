@@ -4,6 +4,7 @@ GdbMiView = require './gdb-mi-view'
 GDB = require './gdb'
 fs = require 'fs'
 BacktraceView = require './backtrace-view'
+ConfigView = require './config-view'
 
 decorate = (file, line, decoration) ->
     line = +line-1
@@ -36,9 +37,13 @@ module.exports = AtomGdbDebugger =
     @gdb.cwd = atom.project.getPaths()[0]
     @gdb.file = state.file
     @gdb.init = state.init
+    if not state.panelVisible?
+        state.panelVisible = true
 
     @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
-    @panel = atom.workspace.addBottomPanel(item: @atomGdbDebuggerView.get(0), visible: false)
+    @panel = atom.workspace.addBottomPanel
+        item: @atomGdbDebuggerView
+        visible: state.panelVisible
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -62,15 +67,33 @@ module.exports = AtomGdbDebugger =
                 type: 'line-number', class: 'gdb-bkpt'
 
     # Register command that toggles this view
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle': => @toggle()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:mi-log': => @mi_log()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:debug-backtrace': =>
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:configure': =>
+        new ConfigView(@gdb)
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:connect': =>
+        @gdb.connect()
+
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:continue': =>
+        @gdb.exec.continue()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:step': =>
+        @gdb.exec.step()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:next': =>
+        @gdb.exec.next()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:finish': =>
+        @gdb.exec.next()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:interrupt': =>
+        @gdb.exec.next()
+
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:backtrace': =>
         new BacktraceView(@gdb)
+
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-panel': => @toggle()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-mi-log': => @mi_log()
 
   serialize: ->
       cmdline: @gdb.cmdline
       file: @gdb.file
       init: @gdb.init
+      panelVisible: @panel.isVisible()
 
   deactivate: ->
     @gdb.disconnect()
@@ -83,7 +106,6 @@ module.exports = AtomGdbDebugger =
       @panel.hide()
     else
       @panel.show()
-      if @gdb.state == 'DISCONNECTED' then @gdb.connect 'gdb'
 
   mi_log: ->
     mi_view = new GdbMiView(@gdb)

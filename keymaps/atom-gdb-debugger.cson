@@ -8,4 +8,9 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
 'atom-workspace':
-  'ctrl-alt-o': 'atom-gdb-debugger:toggle'
+  'ctrl-alt-o': 'atom-gdb-debugger:connect'
+  'f5': 'atom-gdb-debugger:continue'
+  'f11': 'atom-gdb-debugger:step'
+  'shift-f11': 'atom-gdb-debugger:next'
+  'f10': 'atom-gdb-debugger:finish'
+  'shift-f5': 'atom-gdb-debugger:interrupt'
