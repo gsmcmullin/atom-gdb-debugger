@@ -25,6 +25,7 @@ class GdbCliView extends View
             @_text_output "(gdb) "
             @_text_output cmd + '\n', 'text-highlight'
             @gdb.send_cli cmd
+                .catch ->
 
     _text_output: (text, cls) ->
         text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

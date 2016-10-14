@@ -99,7 +99,6 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:open-mi-log': => @mi_log()
 
   consumeStatusBar: (statusBar) ->
-    console.log 'We have a status bar'
     StatusView = require './status-view'
     @statusBarTile = statusBar.addLeftTile
         item: new StatusView(@gdb)
