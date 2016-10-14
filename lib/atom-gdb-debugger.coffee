@@ -83,6 +83,12 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:interrupt': =>
         @gdb.exec.next()
 
+    @subscriptions.add atom.commands.add 'atom-text-editor', 'atom-gdb-debugger:toggle-breakpoint': (ev) =>
+        editor = ev.target.component.editor
+        {row} = editor.getCursorBufferPosition()
+        file = editor.getBuffer().getPath()
+        @gdb.breaks.toggle(file, row+1)
+
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:backtrace': =>
         new BacktraceView(@gdb)
 

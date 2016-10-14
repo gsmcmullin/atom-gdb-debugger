@@ -18,6 +18,24 @@ class Breaks
         return new Disposable () ->
             @observers.splice(@observers.indexOf(cb), 1)
 
+    insert: (pos) ->
+        @gdb.send_mi "-break-insert #{pos}"
+            .then ({bkpt}) =>
+                @_notifyObservers bkpt.number, bkpt
+
+    remove: (id) ->
+        @gdb.send_mi "-break-delete #{id}"
+            .then () =>
+                @_notifyObservers id
+
+    toggle: (file, line) ->
+        for id, bkpt of @breaks
+            if bkpt.fullname == file and +bkpt.line == line
+                @remove id
+                removed = true
+        if not removed
+            @insert "#{file}:#{line}"
+
     _notifyObservers: (id, bkpt) ->
         for cb in @observers
             cb id, bkpt
