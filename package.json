@@ -1,9 +1,13 @@
 {
   "name": "atom-gdb-debugger",
   "main": "./lib/atom-gdb-debugger",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "GDB integration for Atom",
-  "keywords": ["gdb", "debug", "debugger"],
+  "keywords": [
+    "gdb",
+    "debug",
+    "debugger"
+  ],
   "activationCommands": {
     "atom-workspace": [
       "atom-gdb-debugger:connect",
