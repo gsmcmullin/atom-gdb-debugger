@@ -90,7 +90,17 @@ result_list
     : result
         {$$ = {}; $$[$1.key] = $1.value;}
     | result_list COMMA result
-        {$$ = $1; $$[$3.key] = $3.value;}
+        {
+            $$ = $1;
+            if ($3.key in $$) {
+                if ($$[$3.key].constuctor == Array)
+                    $$[$3.key].push($3.value);
+                else
+                    $$[$3.key] = [$$[$3.key], $3.value];
+            } else {
+                $$[$3.key] = $3.value;
+            }
+        }
     ;
 
 result
@@ -130,7 +140,15 @@ list
     | BRACE_OPEN value_list BRACE_CLOSE
         {$$ = $2}
     | BRACKET_OPEN result_list BRACKET_CLOSE
-        {$$ = $2}
+        {
+            var keys = Object.keys($2);
+            if (keys.length != 1)
+                throw new Error('List may only have a single key');
+            var key = keys[0];
+            if ($2[key].constructor != Array)
+                $2[key] = [$2[key]];
+            $$ = $2;
+        }
     ;
 
 stream_record
