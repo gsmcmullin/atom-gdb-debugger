@@ -1,6 +1,5 @@
-{View, $} = require 'atom-space-pen-views'
+{View} = require 'atom-space-pen-views'
 ConfigView = require './config-view'
-{formatFrame} = require './utils'
 
 module.exports =
 class GdbToolbarView extends View
@@ -24,9 +23,6 @@ class GdbToolbarView extends View
             @div class: 'btn-group', =>
                 @button class: 'btn icon icon-tools', click: 'do_config'
 
-            @div class: 'state-display', =>
-                @span 'DISCONNECTED', outlet: 'state'
-
     do_connect: -> @gdb.connect()
     do_disconnect: -> @gdb.disconnect()
 
@@ -44,20 +40,6 @@ class GdbToolbarView extends View
         else
             @disconnect.show()
             @connect.hide()
-
-        switch state
-            when 'DISCONNECTED' then cls = 'text-error'
-            when 'EXITED' then cls = 'text-warning'
-            when 'STOPPED' then cls = 'text-info'
-            when 'RUNNING' then cls = 'text-success'
-
-        @state.removeClass()
-        if frame?
-            console.log formatFrame(frame)
-            @state.text formatFrame(frame)
-        else
-            @state.text state
-        @state.addClass cls
 
     do_config: ->
         new ConfigView(@gdb)

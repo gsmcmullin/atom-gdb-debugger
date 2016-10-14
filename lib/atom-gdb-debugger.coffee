@@ -98,6 +98,13 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-panel': => @toggle()
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:open-mi-log': => @mi_log()
 
+  consumeStatusBar: (statusBar) ->
+    console.log 'We have a status bar'
+    StatusView = require './status-view'
+    @statusBarTile = statusBar.addLeftTile
+        item: new StatusView(@gdb)
+        priority: 100
+
   serialize: ->
       cmdline: @gdb.cmdline
       file: @gdb.file
@@ -105,6 +112,8 @@ module.exports = AtomGdbDebugger =
       panelVisible: @panel.isVisible()
 
   deactivate: ->
+    @statusBarTile?.destroy()
+    @statusBarTile = null
     @gdb.disconnect()
     @panel.destroy()
     @subscriptions.dispose()
