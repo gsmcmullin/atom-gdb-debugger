@@ -37,6 +37,7 @@ module.exports = AtomGdbDebugger =
     @gdb.cwd = atom.project.getPaths()[0]
     @gdb.file = state.file
     @gdb.init = state.init
+    @gdb.isRemote = state.isRemote
     if not state.panelVisible?
         state.panelVisible = true
 
@@ -108,6 +109,7 @@ module.exports = AtomGdbDebugger =
       cmdline: @gdb.cmdline
       file: @gdb.file
       init: @gdb.init
+      isRemote: @gdb.isRemote
       panelVisible: @panel.isVisible()
 
   deactivate: ->

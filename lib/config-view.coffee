@@ -10,6 +10,7 @@ class ConfigView extends View
         @cmdline.val @gdb.cmdline
         @file.val @gdb.file
         @init.val @gdb.init
+        @isRemote.prop 'checked', @gdb.isRemote
 
     @content: (gdb) ->
         @div =>
@@ -19,6 +20,10 @@ class ConfigView extends View
             @div class: 'block', =>
                 @label "Target binary:"
                 @input class: 'input-text native-key-bindings', outlet: 'file'
+            @div class: 'block', =>
+                @label class: 'input-label', =>
+                    @input class: 'input-checkbox', type: 'checkbox', outlet: 'isRemote'
+                    @text 'Target is remote'
             @div class: 'block', =>
                 @div "GDB init commands:"
                 @textarea class: 'input-textarea native-key-bindings', outlet: 'init'
@@ -34,5 +39,6 @@ class ConfigView extends View
         @gdb.cmdline = @cmdline.val()
         @gdb.file = @file.val()
         @gdb.init = @init.val()
+        @gdb.isRemote = @isRemote.prop 'checked'
         @gdb.connect()
         @panel.destroy()

@@ -25,7 +25,13 @@ class Exec
     interrupt: ->
         # Interrupt the target if running
         if @state != 'RUNNING' then return
-        @gdb.child.process.kill 'SIGINT'
+        # There is no hope here for Windows.  See issue #4
+        if @gdb.isRemote
+            @gdb.child.process.kill 'SIGINT'
+        else
+            for id, group of @threadGroups
+                process.kill group.pid, 'SIGINT'
+
 
     backtrace: () ->
         @gdb.send_mi '-stack-list-frames'
