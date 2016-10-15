@@ -48,10 +48,20 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add @gdb.exec.onStateChanged ([state, frame]) =>
         if @mark? then @mark.destroy()
         @mark = null
-        if not frame? or not frame.fullname? then return
+        if state != 'STOPPED' or not frame? then return
+        if not frame.fullname?
+            atom.notifications.addWarning "Debug info not available",
+                description: "This may be because the function is part of an
+                external library, or the binary was compiled without debug
+                information."
+            return
         decorate frame.fullname, frame.line, type: 'line', class: 'gdb-frame'
             .then (mark) => @mark = mark
             .catch () ->
+                atom.notifications.addWarning "Source file not available",
+                    description: "Unable to open `#{frame.file}` for the
+                    current frame.  This may be because the function is part
+                    of a external included library."
 
     @subscriptions.add @gdb.breaks.observe (id, bkpt) =>
         if @breakMarks[id]?
