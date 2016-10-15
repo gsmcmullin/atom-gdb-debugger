@@ -5,9 +5,10 @@ module.exports =
 class StatusView extends View
     initialize: (@gdb) ->
         @gdb.exec.onStateChanged @_onStateChanged.bind(this)
+        @_onStateChanged [@gdb.exec.state]
 
     @content: ->
-        @span 'DISCONNECTED', class: 'text-error'
+        @span 'UNKNOWN', class: 'text-error'
 
     _onStateChanged: ([state, frame]) ->
         switch state
