@@ -1,7 +1,8 @@
 {Emitter, CompositeDisposable} = require 'atom'
 
 class Exec
-    state: 'DISCONNECTD'
+    state: 'DISCONNECTED'
+    threadGroups: {}
 
     constructor: (@gdb) ->
         @emitter = new Emitter
@@ -52,11 +53,18 @@ class Exec
 
     _onNotify: ([cls, results]) ->
         switch cls
+            when 'thread-group-started'
+                @threadGroups[results.id] = pid: +results.pid, threads: []
+            when 'thread-created'
+                @threadGroups[results['group-id']].threads.push results.id
             when 'thread-exited'
-                @_setState 'EXITED'
-            when 'thread-selected'
-                if @state == 'RUNNING'
-                    @_setState 'STOPPED'
+                threads = @threadGroups[results['group-id']].threads
+                index = threads.indexOf results.id
+                threads.splice index, 1
+            when 'thread-group-exited'
+                delete @threadGroups[results.id]
+                if Object.keys(@threadGroups).length == 0
+                    @_setState 'EXITED'
 
     _connected: ->
         @_setState 'EXITED'
