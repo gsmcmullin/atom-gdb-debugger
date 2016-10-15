@@ -48,6 +48,7 @@ class VarObj
         @vars[result.name] = result
         if (i = result.name.lastIndexOf '.') >= 0
             result.parent = result.name.slice 0, i
+        result.nest = result.name.split('.').length - 1
         @_notifyObservers result
         if +result.numchild > 0
             return @_addChildren result.name

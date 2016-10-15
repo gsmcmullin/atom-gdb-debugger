@@ -1,7 +1,42 @@
 {View, $} = require 'atom-space-pen-views'
 
+class VarItemView extends View
+    initialize: ({@name}) ->
+
+    @content: (item) ->
+        if item.numchild > 0 then cls = 'collapsable'
+        @tr name: item.name, parent: item.parent, class: cls, click: 'toggleCollapse', =>
+            @td =>
+                @span item.exp,
+                    style: "margin-left: #{item.nest}em"
+            @td item.value, id: 'value'
+
+    _hideTree: (id) ->
+        children = $(this).parent().find("tr[parent='#{id}']")
+        children.hide()
+        for child in children
+            @_hideTree child.getAttribute('name')
+
+    _showTree: (id) ->
+        children = $(this).parent().find("tr[parent='#{id}']")
+        children.show()
+        for child in children
+            $child = $(child)
+            if not $child.hasClass 'collapsed'
+                @_showTree $child.attr 'name'
+
+    toggleCollapse: ->
+        if @hasClass 'collapsable'
+            @toggleClass 'collapsed'
+            if @hasClass 'collapsed'
+                @_hideTree @name
+            else
+                @_showTree @name
+
 module.exports =
 class VarWatchView extends View
+    items: {}
+
     initialize: (@gdb) ->
         @gdb.varobj.observe @_varObserver.bind(this)
 
@@ -13,8 +48,10 @@ class VarWatchView extends View
                     class: 'input-textarea native-key-bindings'
                     keypress: '_addExpr'
                     outlet: 'expr'
-            @div class: 'block', =>
-                @ul class: 'list-tree has-collapsable-children', outlet: 'listView'
+            @table outlet: 'table', =>
+                @tr =>
+                    @th 'Expression'
+                    @th 'Value'
 
     getTitle: -> 'Watch Variables'
 
@@ -23,32 +60,22 @@ class VarWatchView extends View
         @gdb.varobj.add @expr.val()
         @expr.val ''
 
-    _itemView: (val) ->
-        if +val.numchild == 0
-            "<li class='list-item' varobj-name='#{val.name}'>
-               #{val.exp} = <span>#{val.value}</span>
-             </li>"
-        else
-            "<li class='list-nested-item' varobj-name='#{val.name}'>
-               <div class='list-item'>
-                 #{val.exp} = <span>#{val.value}</span>
-               </div>
-               <ul class='list-tree'></ul>
-             </li>"
+    _addItem: (id, val) ->
+        view = @items[id] = new VarItemView(val)
+        if not val.parent?
+            return @table.append view
+        prev = @find "tr[parent='#{val.parent}']"
+        if prev.length
+            return view.insertAfter(prev[prev.length-1])
+        view.insertAfter(@items[val.parent])
 
-    _findOrCreate: (val) ->
-        item = @find "li[varobj-name='#{val.name}']"
-        if item.length != 0
-            return item
-        parent = @listView
-        if val.parent?
-            parent = @find "li[varobj-name='#{val.parent}']>ul"
-        console.log parent
-        item = $ @_itemView val
-        console.log item
-        parent.append item
-        return item
 
     _varObserver: (id, val) ->
-        item = @_findOrCreate val
-        item.find('span').text(val.value)
+        view = @items[id]
+        if not view? and val?
+            return @_addItem id, val
+        if not val?
+            @view.remove()
+            delete @items[id]
+            return
+        view.find('#value').text(val.value)

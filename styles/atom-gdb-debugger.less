@@ -60,3 +60,23 @@
         }
     }
 }
+
+th, td {
+    padding: 0 0.2em 0 0.2em;
+}
+
+td span {
+    padding-left: 1em;
+    position: relative;
+}
+
+tr.collapsable td span::before {
+    font-family: 'Octicons Regular';
+    content: @chevron-down;
+    position: absolute;
+    left: 0;
+}
+
+tr.collapsable.collapsed td span::before {
+    content: @chevron-right;
+}
