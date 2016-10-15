@@ -110,6 +110,8 @@ class GDB
         # Send an MI command to GDB
         if not @child?
             return Promise.reject 'Not connected'
+        if @exec.state == 'RUNNING'
+            return Promise.reject "Can't send commands while target is running"
         new Promise (resolve, reject) =>
             cmd = @next_token + cmd
             @next_token += 1
