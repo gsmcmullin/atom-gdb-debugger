@@ -20,7 +20,9 @@ class VarObj
         name = "var#{@varno}"
         @varno += 1
         @gdb.send_mi "-var-create #{name} * \"#{expr}\""
-            .then (result) => @_added result
+            .then (result) =>
+                result.exp = expr
+                @_added result
             .then (result) =>
                 @roots.push result.name
                 result
@@ -46,14 +48,12 @@ class VarObj
         @vars[result.name] = result
         if (i = result.name.lastIndexOf '.') >= 0
             result.parent = result.name.slice 0, i
+        @_notifyObservers result
         if +result.numchild > 0
-            @_addChildren result.name
+            return @_addChildren result.name
                 .then (children) =>
                     result.children = (child.name for child in children)
-                    @_notifyObservers result
                     result
-        else
-            @_notifyObservers result
-            result
+        result
 
 module.exports = VarObj
