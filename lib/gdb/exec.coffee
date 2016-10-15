@@ -17,7 +17,12 @@ class Exec
         @gdb.send_mi '-break-insert -t main'
         @gdb.send_mi '-exec-run'
 
-    continue: -> @gdb.send_mi '-exec-continue'
+    continue: ->
+        if @state == 'EXITED'
+            @gdb.send_mi '-exec-run'
+        else
+            @gdb.send_mi '-exec-continue'
+
     next: -> @gdb.send_mi '-exec-next'
     step: -> @gdb.send_mi '-exec-step'
     finish: -> @gdb.send_mi '-exec-finish'
