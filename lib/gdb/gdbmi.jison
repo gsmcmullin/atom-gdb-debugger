@@ -114,7 +114,7 @@ variable
 
 value_list
     : value
-        {$$ = []}
+        {$$ = [$1]}
     | value_list COMMA value
         {$$ = $1.concat($3)}
     ;
