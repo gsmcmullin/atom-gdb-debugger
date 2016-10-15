@@ -2,6 +2,7 @@
 {Parser} = require './gdbmi.js'
 Exec = require './exec'
 Breaks = require './breaks'
+VarObj = require './varobj'
 
 class GDB
     state: 'DISCONNECTED'
@@ -15,6 +16,7 @@ class GDB
         @emitter = new Emitter
         @exec = new Exec(this)
         @breaks = new Breaks(this)
+        @varobj = new VarObj(this)
 
     onConsoleOutput: (cb) ->
         @emitter.on 'console-output', cb
