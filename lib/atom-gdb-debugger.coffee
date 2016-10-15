@@ -5,6 +5,7 @@ GDB = require './gdb'
 fs = require 'fs'
 BacktraceView = require './backtrace-view'
 ConfigView = require './config-view'
+VarWatchView = require './var-watch-view'
 
 decorate = (file, line, decoration) ->
     line = +line-1
@@ -22,6 +23,11 @@ decorate = (file, line, decoration) ->
             editor.decorateMarker mark, decoration
             mark
 
+openInPane = (view) ->
+    pane = atom.workspace.getActivePane()
+    pane.addItem view
+    pane.activateItem view
+
 module.exports = AtomGdbDebugger =
   atomGdbDebuggerView: null
   panel: null
@@ -32,6 +38,7 @@ module.exports = AtomGdbDebugger =
 
   activate: (state) ->
     @gdb = new GDB(state)
+    window.gdb = @gdb
     for k, v of state.gdbConfig
         @gdb.config[k] = v
     @gdb.config.cwd = atom.project.getPaths()[0]
@@ -103,7 +110,10 @@ module.exports = AtomGdbDebugger =
         new BacktraceView(@gdb)
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-panel': => @toggle()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:open-mi-log': => @mi_log()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:open-mi-log': =>
+        openInPane new GdbMiView(@gdb)
+    @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:watch-variables': =>
+        openInPane new VarWatchView(@gdb)
 
   consumeStatusBar: (statusBar) ->
     StatusView = require './status-view'
@@ -128,9 +138,3 @@ module.exports = AtomGdbDebugger =
       @panel.hide()
     else
       @panel.show()
-
-  mi_log: ->
-    mi_view = new GdbMiView(@gdb)
-    pane = atom.workspace.getActivePane()
-    pane.addItem mi_view
-    pane.activateItem mi_view
