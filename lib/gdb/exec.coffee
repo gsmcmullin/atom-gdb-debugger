@@ -26,7 +26,7 @@ class Exec
         # Interrupt the target if running
         if @state != 'RUNNING' then return
         # There is no hope here for Windows.  See issue #4
-        if @gdb.isRemote
+        if @gdb.config.isRemote
             @gdb.child.process.kill 'SIGINT'
         else
             for id, group of @threadGroups

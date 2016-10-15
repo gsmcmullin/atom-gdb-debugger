@@ -8,7 +8,7 @@ class GDB
     child: null
     next_token: 0
     cmdq: []
-    cmdline: 'gdb'
+    config: {cmdline: 'gdb', cwd: '', file: '', init: ''}
 
     constructor: ->
         @parser = new Parser
@@ -39,9 +39,10 @@ class GDB
 
     connect: ->
         if @child? then @child.kill()
+        {cmdline, cwd, file, init} = @config
         # Spawn the GDB child process and connect up event handlers
         @child = new BufferedProcess
-            command: @cmdline
+            command: cmdline
             args: ['-n', '--interpreter=mi']
             stdout: @_raw_output_handler.bind(this)
             stderr: @_raw_output_handler.bind(this)
@@ -51,13 +52,10 @@ class GDB
             @_child_exited()
             x.handle()
         @exec._connected()
-        if @cwd?
-            @send_mi "-environment-cd #{@cstr(@cwd)}"
-        if @file?
-            @send_mi "-file-exec-and-symbols #{@cstr(@file)}"
-        if @init?
-            for cmd in @init.split '\n'
-                @send_cli cmd
+        @send_mi "-environment-cd #{@cstr(cwd)}"
+        @send_mi "-file-exec-and-symbols #{@cstr(file)}"
+        for cmd in init.split '\n'
+            @send_cli cmd
 
     disconnect: ->
         # Politely request the GDB child process to exit

@@ -32,14 +32,10 @@ module.exports = AtomGdbDebugger =
 
   activate: (state) ->
     @gdb = new GDB(state)
-    if state.cmdline?
-        @gdb.cmdline = state.cmdline
-    @gdb.cwd = atom.project.getPaths()[0]
-    @gdb.file = state.file
-    @gdb.init = state.init
-    @gdb.isRemote = state.isRemote
-    if not state.panelVisible?
-        state.panelVisible = true
+    for k, v of state.gdbConfig
+        @gdb.config[k] = v
+    @gdb.config.cwd = atom.project.getPaths()[0]
+    state.panelVisible ?= true
 
     @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
     @panel = atom.workspace.addBottomPanel
@@ -71,7 +67,7 @@ module.exports = AtomGdbDebugger =
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:configure': =>
         new ConfigView(@gdb)
     @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:connect': =>
-        if not @gdb.file? or @gdb.file == ''
+        if @gdb.config.file == ''
             new ConfigView(@gdb)
         else
             @gdb.connect()
@@ -106,10 +102,7 @@ module.exports = AtomGdbDebugger =
         priority: 100
 
   serialize: ->
-      cmdline: @gdb.cmdline
-      file: @gdb.file
-      init: @gdb.init
-      isRemote: @gdb.isRemote
+      gdbConfig: @gdb.config
       panelVisible: @panel.isVisible()
 
   deactivate: ->

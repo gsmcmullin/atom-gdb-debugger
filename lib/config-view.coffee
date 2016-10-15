@@ -7,10 +7,11 @@ class ConfigView extends View
         @panel = atom.workspace.addModalPanel(item: this)
         @panel.show()
 
-        @cmdline.val @gdb.cmdline
-        @file.val @gdb.file
-        @init.val @gdb.init
-        @isRemote.prop 'checked', @gdb.isRemote
+        cf = @gdb.config
+        @cmdline.val cf.cmdline
+        @file.val cf.file
+        @init.val cf.init
+        @isRemote.prop 'checked', cf.isRemote
 
     @content: (gdb) ->
         @div =>
@@ -36,9 +37,10 @@ class ConfigView extends View
         @panel.destroy()
 
     do_ok: ->
-        @gdb.cmdline = @cmdline.val()
-        @gdb.file = @file.val()
-        @gdb.init = @init.val()
-        @gdb.isRemote = @isRemote.prop 'checked'
+        cf = @gdb.config
+        cf.cmdline = @cmdline.val()
+        cf.file = @file.val()
+        cf.init = @init.val()
+        cf.isRemote = @isRemote.prop 'checked'
         @gdb.connect()
         @panel.destroy()
