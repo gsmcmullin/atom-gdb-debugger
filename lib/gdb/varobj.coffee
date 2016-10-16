@@ -12,6 +12,12 @@ class VarObj
         @subscriptions.add @gdb.exec.onStateChanged @_update.bind(this)
 
     observe: (cb) ->
+        # Recursively notify observer of existing items
+        r = (n) =>
+            v = @vars[n]
+            cb n, v
+            r(n) for n in v.children or []
+        r(n) for n in @roots
         @observers.push cb
         return new Disposable () ->
             @observers.splice(@observers.indexOf(cb), 1)
@@ -58,6 +64,10 @@ class VarObj
         cb(name, v) for cb in @observers
 
     _update: ([state]) ->
+        if state == 'DISCONNECTED'
+            for name in @roots.slice()
+                @_removeVar name
+            return
         if state != 'STOPPED' then return
         @gdb.send_mi "-var-update --all-values *"
             .then ({changelist}) =>

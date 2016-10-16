@@ -69,9 +69,8 @@ class VarItemView extends View
 
 module.exports =
 class VarWatchView extends View
-    items: {}
-
     initialize: (@gdb) ->
+        @varviews = {}
         @gdb.varobj.observe @_varObserver.bind(this)
         @gdb.breaks.observe @_breakObserver.bind(this)
         @gdb.exec.onStateChanged @_execStateChanged.bind(this)
@@ -105,22 +104,27 @@ class VarWatchView extends View
                 @error.text err
         @expr.val ''
 
+    _findLast: (name) ->
+        children = @find("tr[parent='#{name}']")
+        if children.length
+            nextName = children[children.length-1].getAttribute('name')
+            return @_findLast nextName
+        return name
+
     _addItem: (id, val) ->
-        view = @items[id] = new VarItemView(@gdb, val)
+        view = @varviews[id] = new VarItemView(@gdb, val)
         if not val.parent?
             return @table.append view
-        prev = @find "tr[parent='#{val.parent}']"
-        if prev.length
-            return view.insertAfter(prev[prev.length-1])
-        view.insertAfter(@items[val.parent])
+        lastName = @_findLast val.parent
+        view.insertAfter @varviews[lastName]
 
     _varObserver: (id, val) ->
-        view = @items[id]
+        view = @varviews[id]
         if not view? and val?
             return @_addItem id, val
         if not val?
             view.remove()
-            delete @items[id]
+            delete @varviews[id]
             return
         v = view.find('#value')
         v.text(val.value)
