@@ -6,6 +6,7 @@ fs = require 'fs'
 BacktraceView = require './backtrace-view'
 ConfigView = require './config-view'
 VarWatchView = require './var-watch-view'
+{cidentFromLine} = require './utils'
 
 decorate = (file, line, decoration) ->
     line = +line-1
@@ -115,6 +116,8 @@ module.exports = AtomGdbDebugger =
         @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:watch-variables': =>
             openInPane new VarWatchView(@gdb)
 
+        @subscriptions.add atom.workspace.observeTextEditors @hookEditor.bind(this)
+
     consumeStatusBar: (statusBar) ->
         StatusView = require './status-view'
         @statusBarTile = statusBar.addLeftTile
@@ -138,3 +141,26 @@ module.exports = AtomGdbDebugger =
             @panel.hide()
         else
             @panel.show()
+
+    hookEditor: (ed) ->
+        timeout = null
+        el = ed.editorElement
+        hover = (ev) =>
+            screenPosition = el.component.screenPositionForMouseEvent ev
+            bufferPosition = ed.bufferPositionForScreenPosition screenPosition
+            buffer = ed.getBuffer()
+            line = buffer.lineForRow bufferPosition.row
+            cident = cidentFromLine line, bufferPosition.column
+            if not cident? or cident == '' then return
+            @gdb.varobj.evalExpression cident
+                .then (val) ->
+                    atom.notifications.addInfo "`#{cident} = #{val}`"
+                .catch () ->
+
+        el.addEventListener 'mousemove', (ev) ->
+            if timeout?
+                clearTimeout timeout
+            timeout = setTimeout hover.bind(null, ev), 2000
+        el.addEventListener 'mouseout', () ->
+            clearTimeout timeout
+            timeout = null

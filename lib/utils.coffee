@@ -5,3 +5,10 @@ module.exports =
         if file?
             fmt += " at #{file}:#{line}"
         return fmt
+
+    cidentFromLine: (line, pos) ->
+        cident = /^[A-Za-z0-9_\.]+/
+        while (match = line.slice(pos).match cident) and pos >= 0
+            ret = match[0]
+            pos--
+        ret

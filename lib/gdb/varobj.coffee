@@ -34,6 +34,11 @@ class VarObj
             .then ({path_expr}) ->
                 path_expr
 
+    evalExpression: (expr) ->
+        @gdb.send_mi "-data-evaluate-expression #{expr}"
+            .then ({value}) ->
+                value
+
     _removeVar: (name) ->
         # Remove from roots or parent's children
         if name in @roots
