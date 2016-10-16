@@ -2,7 +2,6 @@
 
 class VarObj
     constructor: (@gdb) ->
-        @varno = 0
         @roots = []
         @vars = {}
         @observers = []
@@ -22,9 +21,7 @@ class VarObj
             @observers.splice(@observers.indexOf(cb), 1)
 
     add: (expr) ->
-        name = "var#{@varno}"
-        @varno += 1
-        @gdb.send_mi "-var-create #{name} * \"#{expr}\""
+        @gdb.send_mi "-var-create - * \"#{expr}\""
             .then (result) =>
                 result.exp = expr
                 @_added result
