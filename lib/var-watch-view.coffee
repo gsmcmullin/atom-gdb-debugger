@@ -12,6 +12,7 @@ class VarItemView extends View
             if +item.numchild == 0
                 @td =>
                     @input
+                        id: 'wp-toggle'
                         class: 'input-toggle'
                         type: 'checkbox'
                         click: '_toggleWP'
@@ -44,16 +45,18 @@ class VarItemView extends View
                 .then (expr) =>
                     @gdb.breaks.insertWatch expr
                 .then (wp) =>
+                    @attr 'wp', wp
                     @wp = wp
                 .catch (err) =>
-                    atom.notifications.addError(err)
+                    atom.notifications.addError err.toString()
                     ev.target.checked = false
         else
             @gdb.breaks.remove @wp
-                .then ->
+                .then =>
+                    @attr 'wp', null
                     delete @wp
                 .catch (err) =>
-                    atom.notifications.addError(err)
+                    atom.notifications.addError err.toString()
                     ev.target.checked = true
 
     toggleCollapse: ->
@@ -70,6 +73,7 @@ class VarWatchView extends View
 
     initialize: (@gdb) ->
         @gdb.varobj.observe @_varObserver.bind(this)
+        @gdb.breaks.observe @_breakObserver.bind(this)
 
     @content: (gdb) ->
         @div class: 'var-watch-view', =>
@@ -118,3 +122,10 @@ class VarWatchView extends View
             delete @items[id]
             return
         view.find('#value').text(val.value)
+
+    _breakObserver: (id, bkpt) ->
+        if not bkpt?
+            m = @find("tr[wp='#{id}']")
+            m.attr 'wp', null
+            cb = m.find("input#wp-toggle")
+            cb.attr 'checked', false
