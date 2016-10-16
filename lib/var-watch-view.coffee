@@ -5,15 +5,18 @@ class VarItemView extends View
 
     @content: (gdb, item) ->
         if item.numchild > 0 then cls = 'collapsable'
-        @tr {
-            name: item.name
-            parent: item.parent
-            class: cls
-            click: 'toggleCollapse'
-        }, =>
-            @td class: 'expand-column', =>
+        @tr name: item.name, parent: item.parent, class: cls, =>
+            @td class: 'expand-column', click: 'toggleCollapse', =>
                 @span item.exp,
                     style: "margin-left: #{item.nest}em"
+            if +item.numchild == 0
+                @td =>
+                    @input
+                        class: 'input-toggle'
+                        type: 'checkbox'
+                        click: '_toggleWP'
+            else
+                @td()
             @td item.value, id: 'value'
             @td click: '_remove', =>
                 @span class: 'delete'
@@ -34,6 +37,24 @@ class VarItemView extends View
 
     _remove: ->
         @gdb.varobj.remove @name
+
+    _toggleWP: (ev) ->
+        if ev.target.checked
+            @gdb.varobj.getExpression @name
+                .then (expr) =>
+                    @gdb.breaks.insertWatch expr
+                .then (wp) =>
+                    @wp = wp
+                .catch (err) =>
+                    atom.notifications.addError(err)
+                    ev.target.checked = false
+        else
+            @gdb.breaks.remove @wp
+                .then ->
+                    delete @wp
+                .catch (err) =>
+                    atom.notifications.addError(err)
+                    ev.target.checked = true
 
     toggleCollapse: ->
         if @hasClass 'collapsable'
@@ -65,6 +86,7 @@ class VarWatchView extends View
                     @table outlet: 'table', =>
                         @tr =>
                             @th 'Expression'
+                            @th 'WP', style: 'text-align: center'
                             @th 'Value'
 
     getTitle: -> 'Watch Variables'
@@ -86,7 +108,6 @@ class VarWatchView extends View
         if prev.length
             return view.insertAfter(prev[prev.length-1])
         view.insertAfter(@items[val.parent])
-
 
     _varObserver: (id, val) ->
         view = @items[id]

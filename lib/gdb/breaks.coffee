@@ -23,6 +23,11 @@ class Breaks
             .then ({bkpt}) =>
                 @_notifyObservers bkpt.number, bkpt
 
+    insertWatch: (expr) ->
+        @gdb.send_mi "-break-watch #{expr}"
+            .then ({wpt}) ->
+                return wpt.number
+
     remove: (id) ->
         @gdb.send_mi "-break-delete #{id}"
             .then () =>

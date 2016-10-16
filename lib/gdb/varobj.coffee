@@ -27,6 +27,11 @@ class VarObj
                 @roots.push result.name
                 result
 
+    getExpression: (name) ->
+        @gdb.send_mi "-var-info-path-expression #{name}"
+            .then ({path_expr}) ->
+                path_expr
+
     _removeVar: (name) ->
         # Remove from roots or parent's children
         if name in @roots
