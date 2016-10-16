@@ -74,6 +74,7 @@ class VarWatchView extends View
     initialize: (@gdb) ->
         @gdb.varobj.observe @_varObserver.bind(this)
         @gdb.breaks.observe @_breakObserver.bind(this)
+        @gdb.exec.onStateChanged @_execStateChanged.bind(this)
 
     @content: (gdb) ->
         @div class: 'var-watch-view', =>
@@ -121,7 +122,9 @@ class VarWatchView extends View
             view.remove()
             delete @items[id]
             return
-        view.find('#value').text(val.value)
+        v = view.find('#value')
+        v.text(val.value)
+        v.addClass 'changed'
 
     _breakObserver: (id, bkpt) ->
         if not bkpt?
@@ -129,3 +132,8 @@ class VarWatchView extends View
             m.attr 'wp', null
             cb = m.find("input#wp-toggle")
             cb.attr 'checked', false
+
+    _execStateChanged: ([state, frame]) ->
+        if state == 'RUNNING'
+            v = @find('#value.changed')
+            v.removeClass 'changed'
