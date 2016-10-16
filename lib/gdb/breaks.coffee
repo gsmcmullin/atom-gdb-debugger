@@ -1,10 +1,9 @@
 {Emitter, Disposable, CompositeDisposable} = require 'atom'
 
 class Breaks
-    breaks: {}
-    observers: []
-
     constructor: (@gdb) ->
+        @breaks = {}
+        @observers = []
         @emitter = new Emitter
         @subscriptions = new CompositeDisposable
         @subscriptions.add @gdb.onAsyncNotify(@_onNotify.bind(this))

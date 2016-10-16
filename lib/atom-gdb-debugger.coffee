@@ -34,9 +34,9 @@ module.exports = AtomGdbDebugger =
   subscriptions: null
   gdb: null
   mark: null
-  breakMarks: {}
 
   activate: (state) ->
+    @breakMarks = {}
     @gdb = new GDB(state)
     window.gdb = @gdb
     for k, v of state.gdbConfig

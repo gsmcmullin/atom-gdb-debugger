@@ -1,10 +1,9 @@
 {Emitter, CompositeDisposable} = require 'atom'
 
 class Exec
-    state: 'DISCONNECTED'
-    threadGroups: {}
-
     constructor: (@gdb) ->
+        @state = 'DISCONNECTED'
+        @threadGroups = {}
         @emitter = new Emitter
         @subscriptions = new CompositeDisposable
         @subscriptions.add @gdb.onAsyncExec(@_onExec.bind(this))

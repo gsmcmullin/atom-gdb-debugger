@@ -5,13 +5,12 @@ Breaks = require './breaks'
 VarObj = require './varobj'
 
 class GDB
-    state: 'DISCONNECTED'
-    child: null
-    next_token: 0
-    cmdq: []
-    config: {cmdline: 'gdb', cwd: '', file: '', init: ''}
-
     constructor: ->
+        @state = 'DISCONNECTED'
+        @child = null
+        @next_token = 0
+        @cmdq = []
+        @config = {cmdline: 'gdb', cwd: '', file: '', init: ''}
         @parser = new Parser
         @emitter = new Emitter
         @exec = new Exec(this)

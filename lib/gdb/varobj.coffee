@@ -1,12 +1,11 @@
 {Emitter, Disposable, CompositeDisposable} = require 'atom'
 
 class VarObj
-    varno: 0
-    roots: []
-    vars: {}
-    observers: []
-
     constructor: (@gdb) ->
+        @varno = 0
+        @roots = []
+        @vars = {}
+        @observers = []
         @emitter = new Emitter
         @subscriptions = new CompositeDisposable
         @subscriptions.add @gdb.exec.onStateChanged @_update.bind(this)
