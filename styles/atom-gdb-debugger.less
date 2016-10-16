@@ -61,22 +61,32 @@
     }
 }
 
-th, td {
-    padding: 0 0.2em 0 0.2em;
-}
+.var-watch-view {
+    padding: 8px;
+    background: @pane-item-background-color;
 
-td span {
-    padding-left: 1em;
-    position: relative;
-}
+    th, td {
+        padding: 0 0.2em 0 0.2em;
+    }
 
-tr.collapsable td span::before {
-    font-family: 'Octicons Regular';
-    content: @chevron-down;
-    position: absolute;
-    left: 0;
-}
+    td.expand-column span {
+        padding-left: 1em;
+        position: relative;
+    }
 
-tr.collapsable.collapsed td span::before {
-    content: @chevron-right;
+    tr.collapsable td.expand-column span::before {
+        font-family: 'Octicons Regular';
+        content: @chevron-down;
+        position: absolute;
+        left: 0;
+    }
+
+    tr.collapsable.collapsed td.expand-column span::before {
+        content: @chevron-right;
+    }
+
+    td span.delete::before {
+        font-family: 'Octicons Regular';
+        content: @x;
+    }
 }

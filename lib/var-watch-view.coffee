@@ -1,15 +1,22 @@
 {View, $} = require 'atom-space-pen-views'
 
 class VarItemView extends View
-    initialize: ({@name}) ->
+    initialize: (@gdb, {@name}) ->
 
-    @content: (item) ->
+    @content: (gdb, item) ->
         if item.numchild > 0 then cls = 'collapsable'
-        @tr name: item.name, parent: item.parent, class: cls, click: 'toggleCollapse', =>
-            @td =>
+        @tr {
+            name: item.name
+            parent: item.parent
+            class: cls
+            click: 'toggleCollapse'
+        }, =>
+            @td class: 'expand-column', =>
                 @span item.exp,
                     style: "margin-left: #{item.nest}em"
             @td item.value, id: 'value'
+            @td click: '_remove', =>
+                @span class: 'delete'
 
     _hideTree: (id) ->
         children = $(this).parent().find("tr[parent='#{id}']")
@@ -24,6 +31,10 @@ class VarItemView extends View
             $child = $(child)
             if not $child.hasClass 'collapsed'
                 @_showTree $child.attr 'name'
+
+    _remove: ->
+        console.log "Removing #{@name}"
+        @gdb.varobj.remove @name
 
     toggleCollapse: ->
         if @hasClass 'collapsable'
@@ -41,17 +52,18 @@ class VarWatchView extends View
         @gdb.varobj.observe @_varObserver.bind(this)
 
     @content: (gdb) ->
-        @div =>
+        @div class: 'var-watch-view', =>
             @div class: 'block', =>
                 @label 'Add expression to watch:'
                 @input
                     class: 'input-textarea native-key-bindings'
                     keypress: '_addExpr'
                     outlet: 'expr'
-            @table outlet: 'table', =>
-                @tr =>
-                    @th 'Expression'
-                    @th 'Value'
+            @div class: 'tree-view', =>
+                @table outlet: 'table', =>
+                    @tr =>
+                        @th 'Expression'
+                        @th 'Value'
 
     getTitle: -> 'Watch Variables'
 
@@ -61,7 +73,7 @@ class VarWatchView extends View
         @expr.val ''
 
     _addItem: (id, val) ->
-        view = @items[id] = new VarItemView(val)
+        view = @items[id] = new VarItemView(@gdb, val)
         if not val.parent?
             return @table.append view
         prev = @find "tr[parent='#{val.parent}']"
@@ -75,7 +87,7 @@ class VarWatchView extends View
         if not view? and val?
             return @_addItem id, val
         if not val?
-            @view.remove()
+            view.remove()
             delete @items[id]
             return
         view.find('#value').text(val.value)
