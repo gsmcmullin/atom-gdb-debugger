@@ -28,7 +28,6 @@ class VarObj
                 result
 
     _removeVar: (name) ->
-        console.log name
         # Remove from roots or parent's children
         if name in @roots
             pc = @roots

@@ -33,7 +33,6 @@ class VarItemView extends View
                 @_showTree $child.attr 'name'
 
     _remove: ->
-        console.log "Removing #{@name}"
         @gdb.varobj.remove @name
 
     toggleCollapse: ->
