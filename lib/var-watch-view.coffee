@@ -58,17 +58,24 @@ class VarWatchView extends View
                     class: 'input-textarea native-key-bindings'
                     keypress: '_addExpr'
                     outlet: 'expr'
-            @div class: 'tree-view', =>
-                @table outlet: 'table', =>
-                    @tr =>
-                        @th 'Expression'
-                        @th 'Value'
+            @div class: 'block', =>
+                @div class: 'error-message', outlet: 'error'
+            @div class: 'block', =>
+                @div class: 'tree-view', =>
+                    @table outlet: 'table', =>
+                        @tr =>
+                            @th 'Expression'
+                            @th 'Value'
 
     getTitle: -> 'Watch Variables'
 
     _addExpr: (ev) ->
         if ev.charCode != 13 then return
         @gdb.varobj.add @expr.val()
+            .then =>
+                @error.text ''
+            .catch (err) =>
+                @error.text err
         @expr.val ''
 
     _addItem: (id, val) ->
