@@ -27,8 +27,31 @@ class VarObj
                 @roots.push result.name
                 result
 
-    _notifyObservers: (v) ->
-        cb(v.name, v) for cb in @observers
+    _removeVar: (name) ->
+        console.log name
+        # Remove from roots or parent's children
+        if name in @roots
+            pc = @roots
+        else
+            pc = @vars[@vars[name].parent].children
+        pc.splice pc.indexOf(name), 1
+
+        # Recursively remove children
+        if children = @vars[name].children
+            for child in children.slice()
+                @_removeVar child
+
+        # Remove this node
+        delete @vars[name]
+        @_notifyObservers name
+
+    remove: (name) ->
+        @gdb.send_mi "-var-delete #{name}"
+            .then =>
+                @_removeVar name
+
+    _notifyObservers: (name, v) ->
+        cb(name, v) for cb in @observers
 
     _update: ([state]) ->
         if state != 'STOPPED' then return
@@ -37,7 +60,7 @@ class VarObj
                 for v in changelist
                     @vars[v.name].value = v.value
                     @vars[v.name].in_scope = v.in_scope
-                    @_notifyObservers @vars[v.name]
+                    @_notifyObservers v.name, @vars[v.name]
 
     _addChildren: (name) ->
         @gdb.send_mi "-var-list-children --all-values #{name}"
@@ -49,7 +72,7 @@ class VarObj
         if (i = result.name.lastIndexOf '.') >= 0
             result.parent = result.name.slice 0, i
         result.nest = result.name.split('.').length - 1
-        @_notifyObservers result
+        @_notifyObservers result.name, result
         if +result.numchild > 0
             return @_addChildren result.name
                 .then (children) =>
