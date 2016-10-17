@@ -13,6 +13,9 @@ stop by the Gitter channel and let us know what you think.
 * Basic run control functions accessible from UI
 * Display breakpoints in editor
 * Backtrace popup allows user to select frame
+* Set up a view of target variables
+* Set watchpoints on target variables
+* Assign new values to target variables
 
 ## Default key bindings (with GDB/CLI equivalents)
 * `Ctrl-Alt-O` Starts GDB
@@ -23,7 +26,7 @@ stop by the Gitter channel and let us know what you think.
 * `F11` Single step, into function calls (`step`)
 * `Shift-F11` Resume until return  of current function (`finish`)
 * `Ctrl-K B` Show stack backtrace (`backtrace`)
-* `Ctrl-K W` Watch variables (`display`)
+* `Ctrl-K W` Watch variables (`display`/`watch`)
 
 ## Installation
 

@@ -83,7 +83,6 @@ class VarItemView extends View
     _valueBlur: (ev) ->
         ev.target.value = ev.target.oldValue
     _valueKeypress: (ev) ->
-        console.log ev
         if ev.charCode != 13 then return
         @gdb.varobj.assign @name, ev.target.value
             .then (val) ->
