@@ -111,7 +111,7 @@ class VarWatchView extends View
             @div class: 'block', =>
                 @div class: 'error-message', outlet: 'error'
             @div class: 'block', =>
-                @div class: 'tree-view', =>
+                @div class: 'var-watch-tree', =>
                     @table outlet: 'table', =>
                         @tr =>
                             @th 'Expression'
