@@ -11,12 +11,17 @@ class GdbCliView extends View
                 when 'LOG' then cls = 'text-error'
                 when 'TARGET' then cls = 'text-info'
             @_text_output(text, cls)
+        @gdb.exec.onStateChanged ([state]) =>
+            if state == 'DISCONNECTED' or state == 'RUNNING'
+                @cliDiv.css 'visibility', 'hidden'
+            else
+                @cliDiv.css 'visibility', 'visible'
 
     @content: (gdb) ->
         @div class: 'gdb-cli', =>
             @div class: 'scrolled-window', outlet: 'scrolled_window', =>
                 @pre outlet: 'console'
-            @div class: 'gdb-cli-input', =>
+            @div class: 'gdb-cli-input', outlet: 'cliDiv', =>
                 @pre '(gdb)'
                 @input
                     class: 'native-key-bindings'
