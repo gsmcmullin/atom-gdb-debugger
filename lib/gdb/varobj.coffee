@@ -5,9 +5,11 @@ class VarObj
         @roots = []
         @vars = {}
         @observers = []
+        @watchpoints = {}
         @emitter = new Emitter
         @subscriptions = new CompositeDisposable
         @subscriptions.add @gdb.exec.onStateChanged @_execStateChanged.bind(this)
+        @subscriptions.add @gdb.breaks.observe @_breakObserver.bind(this)
 
     observe: (cb) ->
         # Recursively notify observer of existing items
@@ -44,6 +46,25 @@ class VarObj
         @gdb.send_mi "-data-evaluate-expression #{expr}"
             .then ({value}) ->
                 value
+
+    setWatch: (name) ->
+        @getExpression name
+            .then (expr) =>
+                @gdb.breaks.insertWatch expr
+            .then (wp) =>
+                v = @vars[name]
+                v.watchpoint = wp
+                @watchpoints[wp] = name
+                @_notifyObservers name, v
+
+    clearWatch: (name) ->
+        wp = @vars[name].watchpoint
+        @gdb.breaks.remove wp
+            .then =>
+                v = @vars[name]
+                delete v.watchpoint
+                delete @watchpoints[wp]
+                @_notifyObservers name, v
 
     _removeVar: (name) ->
         # Remove from roots or parent's children
@@ -103,5 +124,18 @@ class VarObj
                     result.children = (child.name for child in children)
                     result
         result
+
+    _breakObserver: (id, bkpt) ->
+        if @watchpoints[id]? and not bkpt?
+            vo = @vars[@watchpoints[id]]
+            delete vo.watchpoint
+            delete @watchpoints[id]
+            @_notifyObservers vo.name, vo
+        if bkpt? and not @watchpoints[id] and bkpt.type.endsWith('watchpoint')
+            @add bkpt.what
+                .then (v) =>
+                    v.watchpoint = bkpt.number
+                    @watchpoints[bkpt.number] = v.name
+                    @_notifyObservers v.name, v
 
 module.exports = VarObj

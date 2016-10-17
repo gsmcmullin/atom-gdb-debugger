@@ -5,6 +5,8 @@ class VarItemView extends View
         @name = item.name
         if +item.numchild != 0
             @find('input#value').attr('disabled', true)
+        if item.watchpoint?
+            @find('input#wp-toggle').prop('checked', true)
 
     @content: (gdb, item) ->
         if item.numchild > 0 then cls = 'collapsable'
@@ -51,20 +53,12 @@ class VarItemView extends View
 
     _toggleWP: (ev) ->
         if ev.target.checked
-            @gdb.varobj.getExpression @name
-                .then (expr) =>
-                    @gdb.breaks.insertWatch expr
-                .then (wp) =>
-                    @attr 'wp', wp
-                    @wp = wp
+            @gdb.varobj.setWatch @name
                 .catch (err) =>
                     atom.notifications.addError err.toString()
                     ev.target.checked = false
         else
-            @gdb.breaks.remove @wp
-                .then =>
-                    @attr 'wp', null
-                    delete @wp
+            @gdb.varobj.clearWatch @name
                 .catch (err) =>
                     atom.notifications.addError err.toString()
                     ev.target.checked = true
@@ -97,7 +91,6 @@ class VarWatchView extends View
     initialize: (@gdb) ->
         @varviews = {}
         @gdb.varobj.observe @_varObserver.bind(this)
-        @gdb.breaks.observe @_breakObserver.bind(this)
         @gdb.exec.onStateChanged @_execStateChanged.bind(this)
 
     @content: (gdb) ->
@@ -152,17 +145,13 @@ class VarWatchView extends View
             delete @varviews[id]
             return
         v = view.find('input#value')
-        v.val val.value
-        v.addClass 'changed'
-        while id = @gdb.varobj.vars[id].parent
-            @varviews[id].find('input#value').addClass 'changed'
-
-    _breakObserver: (id, bkpt) ->
-        if not bkpt?
-            m = @find("tr[wp='#{id}']")
-            m.attr 'wp', null
-            cb = m.find("input#wp-toggle")
-            cb.attr 'checked', false
+        if v.val() != val.value
+            v.val val.value
+            v.addClass 'changed'
+            while id = @gdb.varobj.vars[id].parent
+                @varviews[id].find('input#value').addClass 'changed'
+        wp = view.find('input#wp-toggle')
+        wp.prop 'checked', val.watchpoint?
 
     _execStateChanged: ([state, frame]) ->
         if state == 'RUNNING'
