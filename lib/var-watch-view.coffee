@@ -30,7 +30,7 @@ class VarItemView extends View
                     value: item.value
                     focus: '_valueFocus'
                     blur: '_valueBlur'
-                    keypress: '_valueKeypress'
+                    keydown: '_valueKeydown'
             @td click: '_remove', =>
                 @span class: 'delete'
 
@@ -76,15 +76,18 @@ class VarItemView extends View
         ev.target.select()
     _valueBlur: (ev) ->
         ev.target.value = ev.target.oldValue
-    _valueKeypress: (ev) ->
-        if ev.charCode != 13 then return
-        @gdb.varobj.assign @name, ev.target.value
-            .then (val) ->
-                ev.target.oldValue = ev.target.value = val
+    _valueKeydown: (ev) ->
+        switch ev.keyCode
+            when 13 # Enter
+                @gdb.varobj.assign @name, ev.target.value
+                    .then (val) ->
+                        ev.target.oldValue = ev.target.value = val
+                        ev.target.blur()
+                    .catch (err) ->
+                        ev.target.blur()
+                        atom.notifications.addError err.toString()
+            when 27 # Escape
                 ev.target.blur()
-            .catch (err) ->
-                ev.target.blur()
-                atom.notifications.addError err.toString()
 
 module.exports =
 class VarWatchView extends View
