@@ -2,6 +2,8 @@
 
 module.exports =
 class GdbCliView extends View
+    history: []
+
     initialize: (gdb) ->
         @gdb = gdb
         @gdb.onConsoleOutput ([stream, text]) =>
@@ -16,12 +18,22 @@ class GdbCliView extends View
                 @pre outlet: 'console'
             @div class: 'gdb-cli-input', =>
                 @pre '(gdb)'
-                @input class: 'native-key-bindings', keypress: 'do_cli', outlet: 'cmd'
+                @input
+                    class: 'native-key-bindings'
+                    keydown: '_keyDown'
+                    keypress: '_doCli'
+                    outlet: 'cmd'
 
-    do_cli: (event) ->
+    _doCli: (event) ->
         if event.charCode == 13
+            delete @histPos
+            delete @editHistory
             cmd = @cmd.val()
             @cmd.val ''
+            if cmd == ''
+                cmd = @history.slice(-1)
+            else
+                @history.push cmd
             @_text_output "(gdb) "
             @_text_output cmd + '\n', 'text-highlight'
             @gdb.send_cli cmd
@@ -33,3 +45,28 @@ class GdbCliView extends View
             text = "<span class='#{cls}'>#{text}</span>"
         @console.append text
         @scrolled_window.prop 'scrollTop', @console.height() - @scrolled_window.height()
+
+    _keyDown: (ev) ->
+        switch ev.keyCode
+            when 38 #up
+                @_histUp ev
+            when 40 #down
+                @_histDown ev
+
+    _histUpDown: (ev, f)->
+        if @histPos?
+            @editHistory[@histPos] = @cmd.val()
+        else
+            @editHistory = @history.slice()
+            @editHistory.push @cmd.val()
+            @histPos = @editHistory.length - 1
+        f()
+        v = @editHistory[@histPos]
+        @cmd.val v
+        @cmd[0].setSelectionRange(v.length, v.length)
+        ev.preventDefault()
+
+    _histUp: (ev) ->
+        @_histUpDown ev, => (@histPos-- if @histPos > 0)
+    _histDown: (ev) ->
+        @_histUpDown ev, => (@histPos++ if @histPos < @history.length)
