@@ -154,6 +154,8 @@ class VarWatchView extends View
         v = view.find('input#value')
         v.val val.value
         v.addClass 'changed'
+        while id = @gdb.varobj.vars[id].parent
+            @varviews[id].find('input#value').addClass 'changed'
 
     _breakObserver: (id, bkpt) ->
         if not bkpt?
