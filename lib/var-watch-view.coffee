@@ -1,7 +1,10 @@
 {View, $} = require 'atom-space-pen-views'
 
 class VarItemView extends View
-    initialize: (@gdb, {@name}) ->
+    initialize: (@gdb, item) ->
+        @name = item.name
+        if +item.numchild != 0
+            @find('input#value').attr('disabled', true)
 
     @content: (gdb, item) ->
         if item.numchild > 0 then cls = 'collapsable'
@@ -18,7 +21,14 @@ class VarItemView extends View
                         click: '_toggleWP'
             else
                 @td()
-            @td item.value, id: 'value'
+            @td =>
+                @input
+                    id: 'value'
+                    class: 'input-text native-key-bindings'
+                    value: item.value
+                    focus: '_valueFocus'
+                    blur: '_valueBlur'
+                    keypress: '_valueKeypress'
             @td click: '_remove', =>
                 @span class: 'delete'
 
@@ -66,6 +76,22 @@ class VarItemView extends View
                 @_hideTree @name
             else
                 @_showTree @name
+
+    _valueFocus: (ev) ->
+        ev.target.oldValue = ev.target.value
+        ev.target.select()
+    _valueBlur: (ev) ->
+        ev.target.value = ev.target.oldValue
+    _valueKeypress: (ev) ->
+        console.log ev
+        if ev.charCode != 13 then return
+        @gdb.varobj.assign @name, ev.target.value
+            .then (val) ->
+                ev.target.oldValue = ev.target.value = val
+                ev.target.blur()
+            .catch (err) ->
+                ev.target.blur()
+                atom.notifications.addError err.toString()
 
 module.exports =
 class VarWatchView extends View
@@ -126,8 +152,8 @@ class VarWatchView extends View
             view.remove()
             delete @varviews[id]
             return
-        v = view.find('#value')
-        v.text(val.value)
+        v = view.find('input#value')
+        v.val val.value
         v.addClass 'changed'
 
     _breakObserver: (id, bkpt) ->
@@ -139,5 +165,5 @@ class VarWatchView extends View
 
     _execStateChanged: ([state, frame]) ->
         if state == 'RUNNING'
-            v = @find('#value.changed')
+            v = @find('input#value.changed')
             v.removeClass 'changed'

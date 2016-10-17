@@ -7,7 +7,7 @@ class VarObj
         @observers = []
         @emitter = new Emitter
         @subscriptions = new CompositeDisposable
-        @subscriptions.add @gdb.exec.onStateChanged @_update.bind(this)
+        @subscriptions.add @gdb.exec.onStateChanged @_execStateChanged.bind(this)
 
     observe: (cb) ->
         # Recursively notify observer of existing items
@@ -28,6 +28,12 @@ class VarObj
             .then (result) =>
                 @roots.push result.name
                 result
+
+    assign: (name, val) ->
+        @gdb.send_mi "-var-assign #{name} #{val}"
+            .then ({value}) =>
+                @update()
+                value
 
     getExpression: (name) ->
         @gdb.send_mi "-var-info-path-expression #{name}"
@@ -64,12 +70,15 @@ class VarObj
     _notifyObservers: (name, v) ->
         cb(name, v) for cb in @observers
 
-    _update: ([state]) ->
+    _execStateChanged: ([state]) ->
         if state == 'DISCONNECTED'
             for name in @roots.slice()
                 @_removeVar name
             return
         if state != 'STOPPED' then return
+        @update()
+
+    update: ->
         @gdb.send_mi "-var-update --all-values *"
             .then ({changelist}) =>
                 for v in changelist
