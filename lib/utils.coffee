@@ -12,3 +12,12 @@ module.exports =
             ret = match[0]
             pos--
         ret
+
+    cstr: (s)->
+        esc = ''
+        for c in s
+            switch c
+                when '"' then c = '\\"'
+                when '\\' then c = '\\\\'
+            esc += c
+        return "\"#{esc}\""

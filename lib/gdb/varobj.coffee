@@ -1,4 +1,5 @@
 {Emitter, Disposable, CompositeDisposable} = require 'atom'
+{cstr} = require '../utils'
 
 class VarObj
     constructor: (@gdb) ->
@@ -23,7 +24,7 @@ class VarObj
             @observers.splice(@observers.indexOf(cb), 1)
 
     add: (expr) ->
-        @gdb.send_mi "-var-create - * \"#{expr}\""
+        @gdb.send_mi "-var-create - * #{cstr(expr)}"
             .then (result) =>
                 result.exp = expr
                 @_added result
@@ -32,7 +33,7 @@ class VarObj
                 result
 
     assign: (name, val) ->
-        @gdb.send_mi "-var-assign #{name} #{val}"
+        @gdb.send_mi "-var-assign #{name} #{cstr(val)}"
             .then ({value}) =>
                 @update()
                 value

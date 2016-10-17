@@ -3,6 +3,7 @@
 Exec = require './exec'
 Breaks = require './breaks'
 VarObj = require './varobj'
+{cstr} = require '../utils'
 
 class GDB
     constructor: ->
@@ -29,15 +30,6 @@ class GDB
     onAsyncStatus: (cb) ->
         @emitter.on 'async-status', cb
 
-    cstr: (s)->
-        esc = ''
-        for c in s
-            switch c
-                when '"' then c = '\\"'
-                when '\\' then c = '\\\\'
-            esc += c
-        return "\"#{esc}\""
-
     connect: ->
         if @child? then @child.kill()
         {cmdline, cwd, file, init} = @config
@@ -53,8 +45,9 @@ class GDB
             @_child_exited()
             x.handle()
         @exec._connected()
-        @send_mi "-environment-cd #{@cstr(cwd)}"
-        @send_mi "-file-exec-and-symbols #{@cstr(file)}"
+        @send_mi "-gdb-set confirm off"
+        @send_mi "-environment-cd #{cstr(cwd)}"
+        @send_mi "-file-exec-and-symbols #{cstr(file)}"
         for cmd in init.split '\n'
             @send_cli cmd
 
@@ -130,6 +123,6 @@ class GDB
         @cmdq = []
 
     send_cli: (cmd) ->
-        @send_mi "-interpreter-exec console #{@cstr(cmd)}"
+        @send_mi "-interpreter-exec console #{cstr(cmd)}"
 
 module.exports = GDB
