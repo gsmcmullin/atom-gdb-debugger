@@ -75,13 +75,18 @@ class VarObj
         pc.splice pc.indexOf(name), 1
 
         # Recursively remove children
-        if children = @vars[name].children
-            for child in children.slice()
-                @_removeVar child
-
-        # Remove this node
-        delete @vars[name]
-        @_notifyObservers name
+        children = @vars[name].children or []
+        Promise.all (@_removeVar c for c in children.slice())
+            .then =>
+                # Remove any watchpoint
+                wp = @vars[name].watchpoint
+                if wp
+                    delete @watchpoints[wp]
+                    return @gdb.breaks.remove wp
+            .then =>
+                # Remove this node
+                delete @vars[name]
+                @_notifyObservers name
 
     remove: (name) ->
         @gdb.send_mi "-var-delete #{name}"
