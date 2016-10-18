@@ -1,4 +1,24 @@
-{View} = require 'atom-space-pen-views'
+{View, $$} = require 'atom-space-pen-views'
+{Directory} = require 'atom'
+
+findGDB = ->
+    Promise.all (for dirName in process.env.PATH.split(':')
+        new Promise (resolve, reject) ->
+            new Directory(dirName).getEntries (err, entries) =>
+                if err?
+                    resolve []
+                    return
+                resolve(for file in entries
+                    if file.getBaseName().search(/^(.*-)?gdb(-.*)?$/) >= 0
+                        file.getBaseName()
+                )
+        )
+    .then (ll) ->
+        results = []
+        for l in ll
+            for f in l
+                if f? then results.push f
+        results
 
 module.exports =
 class ConfigView extends View
@@ -8,16 +28,24 @@ class ConfigView extends View
         @panel.show()
 
         cf = @gdb.config
-        @cmdline.val cf.cmdline
         @file.val cf.file
         @init.val cf.init
+        @dummy.text cf.cmdline
         @isRemote.prop 'checked', cf.isRemote
+
+        findGDB().then (gdbs) =>
+            @cmdline.empty()
+            for gdb in gdbs
+                @cmdline.append $$ -> @option gdb, value: gdb
+            @cmdline[0].value = cf.cmdline
 
     @content: (gdb) ->
         @div =>
             @div class: 'block', =>
                 @label "GDB binary:"
-                @input class: 'input-text native-key-bindings', outlet: 'cmdline'
+                @select class: 'input-text', outlet: 'cmdline', =>
+                    # Just so this doesn't sit empty while we wait for promises
+                    @option 'gdb', outlet: 'dummy'
             @div class: 'block', =>
                 @label "Target binary:"
                 @input class: 'input-text native-key-bindings', outlet: 'file'
