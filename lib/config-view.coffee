@@ -1,5 +1,7 @@
 {View, $$} = require 'atom-space-pen-views'
-{Directory} = require 'atom'
+{Directory, File} = require 'atom'
+remote = require 'remote'
+dialog = remote.require 'dialog'
 
 findGDB = ->
     Promise.all (for dirName in process.env.PATH.split(':')
@@ -28,7 +30,7 @@ class ConfigView extends View
         @panel.show()
 
         cf = @gdb.config
-        @file.val cf.file
+        @_setFile cf.file
         @init.val cf.init
         @dummy.text cf.cmdline
         @isRemote.prop 'checked', cf.isRemote
@@ -40,7 +42,7 @@ class ConfigView extends View
             @cmdline[0].value = cf.cmdline
 
     @content: (gdb) ->
-        @div =>
+        @div class: 'gdb-config-view', =>
             @div class: 'block', =>
                 @label "GDB binary:"
                 @select class: 'input-text', outlet: 'cmdline', =>
@@ -48,7 +50,14 @@ class ConfigView extends View
                     @option 'gdb', outlet: 'dummy'
             @div class: 'block', =>
                 @label "Target binary:"
-                @input class: 'input-text native-key-bindings', outlet: 'file'
+                @div style: 'display: flex', click: '_selectBinary', =>
+                    @button 'Browse', class: 'btn'
+                    @input
+                        value: 'No file selected'
+                        style: 'flex: 1'
+                        class: 'input-text native-key-bindings error'
+                        disabled: true
+                        outlet: 'fileDisplay'
             @div class: 'block', =>
                 @label class: 'input-label', =>
                     @input class: 'input-checkbox', type: 'checkbox', outlet: 'isRemote'
@@ -67,8 +76,31 @@ class ConfigView extends View
     do_ok: ->
         cf = @gdb.config
         cf.cmdline = @cmdline.val()
-        cf.file = @file.val()
+        cf.file = @file
         cf.init = @init.val()
         cf.isRemote = @isRemote.prop 'checked'
         @gdb.connect()
         @panel.destroy()
+
+    _setFile: (path) ->
+        if not path? or path == ''
+            delete @file
+            @fileDisplay.val 'No file selected'
+            return
+        @file = path
+        f = new File path, false
+        @fileDisplay.val f.getBaseName()
+        f.exists().then (exists) =>
+            if not exists
+                @fileDisplay.addClass 'error'
+            else
+                @fileDisplay.removeClass 'error'
+
+    _selectBinary: ->
+        dialog.showOpenDialog {
+            title: 'Select target binary'
+            defaultPath: @gdb.config.cwd
+            properties :['openFile']
+        }, (file) =>
+            if not file? then return
+            @_setFile file[0]
