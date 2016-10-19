@@ -41,11 +41,11 @@ module.exports = AtomGdbDebugger =
         @subscriptions.add atom.commands.add 'atom-workspace',
             'atom-gdb-debugger:configure': => new ConfigView(@gdb)
             'atom-gdb-debugger:connect': => @connect()
-            'atom-gdb-debugger:continue': => @gdb.exec.continue()
-            'atom-gdb-debugger:step': => @gdb.exec.step()
-            'atom-gdb-debugger:next': => @gdb.exec.next()
-            'atom-gdb-debugger:finish': => @gdb.exec.finish()
-            'atom-gdb-debugger:interrupt': => @gdb.exec.interrupt()
+            'atom-gdb-debugger:continue': => @cmdWrap => @gdb.exec.continue()
+            'atom-gdb-debugger:step': => @cmdWrap => @gdb.exec.step()
+            'atom-gdb-debugger:next': => @cmdWrap => @gdb.exec.next()
+            'atom-gdb-debugger:finish': => @cmdWrap => @gdb.exec.finish()
+            'atom-gdb-debugger:interrupt': => @cmdWrap => @gdb.exec.interrupt()
             'atom-gdb-debugger:backtrace': => new BacktraceView(@gdb)
             'atom-gdb-debugger:toggle-panel': => @toggle(@panel, 'panelVisible')
             'atom-gdb-debugger:toggle-cli': => @toggle(@cliPanel, 'cliVisible')
@@ -54,6 +54,10 @@ module.exports = AtomGdbDebugger =
 
         @editorIntegration = new EditorIntegration(@gdb)
 
+    cmdWrap: (cmd) ->
+        cmd()
+            .catch (err) =>
+                atom.notifications.addError err.toString()
     connect: ->
         if @gdb.config.file == ''
             new ConfigView(@gdb)
