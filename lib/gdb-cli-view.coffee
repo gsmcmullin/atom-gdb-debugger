@@ -18,16 +18,19 @@ class GdbCliView extends View
                 @cliDiv.css 'visibility', 'visible'
 
     @content: (gdb) ->
-        @div class: 'gdb-cli', =>
-            @div class: 'scrolled-window', outlet: 'scrolled_window', =>
+        @div class: 'gdb-cli', click: '_focusInput', =>
+            @div outlet: 'scrolledContainer', =>
                 @pre outlet: 'console'
-            @div class: 'gdb-cli-input', outlet: 'cliDiv', =>
-                @pre '(gdb)'
-                @input
-                    class: 'native-key-bindings'
-                    keydown: '_keyDown'
-                    keypress: '_doCli'
-                    outlet: 'cmd'
+                @div class: 'gdb-cli-input', outlet: 'cliDiv', =>
+                    @pre '(gdb)'
+                    @input
+                        class: 'native-key-bindings'
+                        keydown: '_keyDown'
+                        keypress: '_doCli'
+                        outlet: 'cmd'
+
+    _focusInput: ->
+        @cmd.focus()
 
     _doCli: (event) ->
         if event.charCode == 13
@@ -49,7 +52,7 @@ class GdbCliView extends View
         if cls?
             text = "<span class='#{cls}'>#{text}</span>"
         @console.append text
-        @scrolled_window.prop 'scrollTop', @console.height() - @scrolled_window.height()
+        @prop 'scrollTop', @scrolledContainer.height() - @height()
 
     _keyDown: (ev) ->
         switch ev.keyCode

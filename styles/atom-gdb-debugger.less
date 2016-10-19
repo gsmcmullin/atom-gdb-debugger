@@ -16,34 +16,28 @@
     padding: 4px;
 }
 
-.gdb-cli-input {
-    white-space: nowrap;
-    display: flex;
-    input {
-        flex: 1;
-        border-color: transparent;
-        background: inherit;
-        font-family: monospace;
-        border: 0;
-        padding: 0 0 0 6px;
-        color: @text-color-highlight;
-    }
-}
 
 .gdb-cli {
-    padding: 8px;;
+    position: relative;
+    height: 100px;
+    overflow-y: scroll;
     pre, code {
         background: transparent;
         padding: 0;
     }
-    .scrolled-window {
-        overflow-y: scroll;
-        height: 100%;
+    .gdb-cli-input {
+        white-space: nowrap;
+        display: flex;
+        input {
+            flex: 1;
+            border-color: transparent;
+            background: inherit;
+            font-family: monospace;
+            border: 0;
+            padding: 0 0 0 6px;
+            color: @text-color-highlight;
+        }
     }
-}
-
-.gdb-debugger-panel .gdb-cli .scrolled-window {
-    height: 100px;
 }
 
 .atom-text-editor, :host, atom-text-editor, atom-text-editor::shadow {
