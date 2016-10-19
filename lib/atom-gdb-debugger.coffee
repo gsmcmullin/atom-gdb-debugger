@@ -43,12 +43,13 @@ module.exports = AtomGdbDebugger =
         for k, v of state.gdbConfig
             @gdb.config[k] = v
         @gdb.config.cwd = atom.project.getPaths()[0]
-        state.panelVisible ?= true
+        @panelVisible = state.panelVisible
+        @panelVisible ?= true
 
         @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
         @panel = atom.workspace.addBottomPanel
             item: @atomGdbDebuggerView
-            visible: state.panelVisible
+            visible: false
 
         # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
         @subscriptions = new CompositeDisposable
@@ -107,6 +108,9 @@ module.exports = AtomGdbDebugger =
             new ConfigView(@gdb)
         else
             @gdb.connect()
+                .then =>
+                    if @panelVisible
+                        @panel.show()
                 .catch (err) =>
                     x = atom.notifications.addError 'Error launching GDB',
                         description: err.toString()
@@ -125,7 +129,7 @@ module.exports = AtomGdbDebugger =
 
     serialize: ->
           gdbConfig: @gdb.config
-          panelVisible: @panel.isVisible()
+          panelVisible: @panelVisible
 
     deactivate: ->
         @statusBarTile?.destroy()
@@ -140,6 +144,7 @@ module.exports = AtomGdbDebugger =
             @panel.hide()
         else
             @panel.show()
+        @panelVisible = @panel.isVisible()
 
     hookEditor: (ed) ->
         timeout = null
