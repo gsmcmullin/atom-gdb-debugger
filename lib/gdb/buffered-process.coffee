@@ -26,9 +26,9 @@ class BufferedProcess
 
     _stdout: (data) ->
         # Split lines and keep patial line for next time
-        data = @partial_line + data.toString()
+        data = @partialLine + data.toString()
         lines = data.split '\n'
-        @partial_line = lines.slice(-1)
+        @partialLine = lines.slice(-1)
         lines = lines.slice 0, -1
         for line in lines
             @stdout line
