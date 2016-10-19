@@ -19,7 +19,7 @@
 
 .gdb-cli {
     position: relative;
-    height: 100px;
+    height: 100%;
     overflow-y: scroll;
     pre, code {
         background: transparent;
@@ -104,4 +104,28 @@
     input.error,select.error {
         color: @text-color-error;
     }
+}
+
+.gdb-resizeable {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    .gdb-resize-grip {
+        position: absolute;
+        z-index: 1000;
+    }
+    .gdb-resize-grip.left,.resize-grip.right {
+        cursor: ew-resize;
+        width: 8px;
+        height: 100%;
+    }
+    .gdb-resize-grip.top,.resize-grip.bottom {
+        cursor: ns-resize;
+        height: 8px;
+        width: 100%;
+    }
+    .gdb-resize-grip.top { top: 0; }
+    .gdb-resize-grip.bottom { bottom: 0; }
+    .gdb-resize-grip.left { left: 0; }
+    .gdb-resize-grip.right { right: 0; }
 }

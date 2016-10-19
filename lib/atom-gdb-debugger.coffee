@@ -1,4 +1,3 @@
-AtomGdbDebuggerView = require './atom-gdb-debugger-view'
 GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
 GDB = require './gdb'
@@ -7,6 +6,8 @@ BacktraceView = require './backtrace-view'
 ConfigView = require './config-view'
 VarWatchView = require './var-watch-view'
 {cidentFromLine} = require './utils'
+Resizable = require './resizable'
+GdbCliView = require './gdb-cli-view'
 
 decorate = (file, line, decoration) ->
     line = +line-1
@@ -46,9 +47,8 @@ module.exports = AtomGdbDebugger =
         @panelVisible = state.panelVisible
         @panelVisible ?= true
 
-        @atomGdbDebuggerView = new AtomGdbDebuggerView(@gdb)
         @panel = atom.workspace.addBottomPanel
-            item: @atomGdbDebuggerView
+            item: new Resizable 'top', state.cliSize or 150, new GdbCliView(@gdb)
             visible: false
 
         # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
@@ -130,6 +130,7 @@ module.exports = AtomGdbDebugger =
     serialize: ->
           gdbConfig: @gdb.config
           panelVisible: @panelVisible
+          cliSize: @panel.getItem().height()
 
     deactivate: ->
         @statusBarTile?.destroy()
