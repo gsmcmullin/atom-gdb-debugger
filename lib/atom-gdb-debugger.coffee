@@ -1,9 +1,9 @@
 GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
 GDB = require './gdb'
+DebugPanelView = require './debug-panel-view'
 BacktraceView = require './backtrace-view'
 ConfigView = require './config-view'
-VarWatchView = require './var-watch-view'
 Resizable = require './resizable'
 GdbCliView = require './gdb-cli-view'
 EditorIntegration = require './editor-integration'
@@ -32,7 +32,7 @@ module.exports = AtomGdbDebugger =
             visible: false
 
         @panel = atom.workspace.addRightPanel
-            item: new Resizable 'left', state.panelSize or 300, new VarWatchView(@gdb)
+            item: new Resizable 'left', state.panelSize or 300, new DebugPanelView(@gdb)
             visible: false
 
         # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
