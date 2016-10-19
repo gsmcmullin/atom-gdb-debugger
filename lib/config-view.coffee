@@ -35,11 +35,19 @@ class ConfigView extends View
         @dummy.text cf.cmdline
         @isRemote.prop 'checked', cf.isRemote
 
+        @cmdline.on 'change', => @_validate()
+
         findGDB().then (gdbs) =>
+            if gdbs.length == 0
+                @dummy.text 'No GDB found'
+                @cmdline.addClass 'error'
+                @_validate()
+                return
             @cmdline.empty()
             for gdb in gdbs
                 @cmdline.append $$ -> @option gdb, value: gdb
             @cmdline[0].value = cf.cmdline
+            @_validate()
 
     @content: (gdb) ->
         @div class: 'gdb-config-view', =>
@@ -47,7 +55,7 @@ class ConfigView extends View
                 @label "GDB binary:"
                 @select class: 'input-text', outlet: 'cmdline', =>
                     # Just so this doesn't sit empty while we wait for promises
-                    @option 'gdb', outlet: 'dummy'
+                    @option 'gdb', value: '', outlet: 'dummy'
             @div class: 'block', =>
                 @label "Target binary:"
                 @div style: 'display: flex', click: '_selectBinary', =>
@@ -68,7 +76,11 @@ class ConfigView extends View
 
             @div class: 'block', =>
                 @button 'Cancel', class: 'btn inline-block', click: 'do_close'
-                @button 'OK', class: 'btn inline-block', click: 'do_ok'
+                @button 'OK',
+                    class: 'btn inline-block'
+                    disabled: true
+                    outlet: 'ok'
+                    click: 'do_ok'
 
     do_close: ->
         @panel.destroy()
@@ -87,14 +99,16 @@ class ConfigView extends View
             delete @file
             @fileDisplay.val 'No file selected'
             return
-        @file = path
         f = new File path, false
         @fileDisplay.val f.getBaseName()
         f.exists().then (exists) =>
             if not exists
                 @fileDisplay.addClass 'error'
+                delete @file
             else
                 @fileDisplay.removeClass 'error'
+                @file = path
+            @_validate()
 
     _selectBinary: ->
         dialog.showOpenDialog {
@@ -104,3 +118,11 @@ class ConfigView extends View
         }, (file) =>
             if not file? then return
             @_setFile file[0]
+
+    _validate: ->
+        if @file? and @cmdline.val() != ''
+            @ok.attr 'disabled', false
+            return false
+        else
+            @ok.attr 'disabled', true
+            return true

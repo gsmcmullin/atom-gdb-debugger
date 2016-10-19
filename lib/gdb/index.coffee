@@ -46,7 +46,8 @@ class GDB
             x.handle()
         @exec._connected()
         @send_mi "-gdb-set confirm off"
-        @send_mi "-environment-cd #{cstr(cwd)}"
+        if cwd?
+            @send_mi "-environment-cd #{cstr(cwd)}"
         @send_mi "-file-exec-and-symbols #{cstr(file)}"
         for cmd in init.split '\n'
             @send_cli cmd
