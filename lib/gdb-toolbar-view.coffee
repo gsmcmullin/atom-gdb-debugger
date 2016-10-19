@@ -3,6 +3,12 @@ ConfigView = require './config-view'
 
 module.exports =
 class GdbToolbarView extends View
+    @cmdMask:
+        'DISCONNECTED': ['connect', 'configure']
+        'EXITED': ['connect', 'configure', 'continue']
+        'STOPPED': ['connect', 'configure', 'continue', 'next', 'step', 'finish']
+        'RUNNING': ['connect', 'configure', 'interrupt']
+
     initialize: (gdb) ->
         @gdb = gdb
         @gdb.exec.onStateChanged @_onStateChanged.bind(this)
@@ -32,3 +38,10 @@ class GdbToolbarView extends View
             @connect.removeClass 'selected'
         else
             @connect.addClass 'selected'
+
+        enabledCmds = GdbToolbarView.cmdMask[state]
+        for button in @find('button')
+            if button.getAttribute('command') in enabledCmds
+                button.removeAttribute 'disabled'
+            else
+                button.setAttribute 'disabled', true
