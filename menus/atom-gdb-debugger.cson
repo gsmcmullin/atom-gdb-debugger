@@ -16,6 +16,10 @@
         {
           'label': 'Toggle Panel'
           'command': 'atom-gdb-debugger:toggle-panel'
+        },
+        {
+          'label': 'Toggle CLI'
+          'command': 'atom-gdb-debugger:toggle-cli'
         }
       ]
     ]

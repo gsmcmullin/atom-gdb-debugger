@@ -2,11 +2,14 @@
 
 module.exports =
 class Resizable extends View
-    initialize: (@side, @initialSize, child) ->
+    initialize: (@side, size, child) ->
         if side == 'left' or side == 'right'
-            @width initialSize
-        if side == 'top' or side == 'bottom'
-            @height initialSize
+            @size = @width
+            @evkey = 'pageX'
+        else
+            @size = @height
+            @evkey = 'pageY'
+        @size size
 
     @content: (side, intialSize, child) ->
         @div class: 'gdb-resizeable', =>
@@ -16,22 +19,19 @@ class Resizable extends View
                 outlet: 'grip'
             @subview 'child', child
 
-    _resizeStart: (@_startev) ->
-        $(document).on 'mousemove', @_resize
-        $(document).on 'mouseup', @_resizeStop
+    _resizeStart: (ev) ->
+        @_startev = ev
+        @initialSize = @size()
+        $(document).on 'mousemove', (ev) => @_resize(ev)
+        $(document).on 'mouseup', => @_resizeStop()
 
-    _resizeStop: =>
+    _resizeStop: ->
         $(document).off 'mousemove'
         $(document).off 'mouseup'
-        @initialSize = @height()
 
-    _resize: (ev) =>
-        switch @side
-            when 'top'
-                @height @initialSize + @_startev.pageY - ev.pageY
-            when 'bottom'
-                @height @initialSize - @_startev.pageY + ev.pageY
-            when 'left'
-                @height @initialSize + @_startev.pageX - ev.pageX
-            when 'right'
-                @height @initialSize - @_startev.pageX + ev.pageX
+    _resize: (ev) ->
+        #console.log this, ev
+        adjust = @_startev[@evkey] - ev[@evkey]
+        if @side == 'bottom' or @side == 'right'
+            adjust = -adjust
+        @size @initialSize + adjust

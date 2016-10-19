@@ -14,7 +14,6 @@ openInPane = (view) ->
     pane.activateItem view
 
 module.exports = AtomGdbDebugger =
-    panel: null
     subscriptions: null
     gdb: null
 
@@ -26,9 +25,14 @@ module.exports = AtomGdbDebugger =
         @gdb.config.cwd = atom.project.getPaths()[0]
         @panelVisible = state.panelVisible
         @panelVisible ?= true
+        @cliVisible = state.cliVisible
 
-        @panel = atom.workspace.addBottomPanel
+        @cliPanel = atom.workspace.addBottomPanel
             item: new Resizable 'top', state.cliSize or 150, new GdbCliView(@gdb)
+            visible: false
+
+        @panel = atom.workspace.addRightPanel
+            item: new Resizable 'left', state.panelSize or 300, new VarWatchView(@gdb)
             visible: false
 
         # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
@@ -43,7 +47,8 @@ module.exports = AtomGdbDebugger =
             'atom-gdb-debugger:finish': => @gdb.exec.finish()
             'atom-gdb-debugger:interrupt': => @gdb.exec.interrupt()
             'atom-gdb-debugger:backtrace': => new BacktraceView(@gdb)
-            'atom-gdb-debugger:toggle-panel': => @toggle()
+            'atom-gdb-debugger:toggle-panel': => @toggle(@panel, 'panelVisible')
+            'atom-gdb-debugger:toggle-cli': => @toggle(@cliPanel, 'cliVisible')
             'atom-gdb-debugger:open-mi-log': => openInPane new GdbMiView(@gdb)
             'atom-gdb-debugger:watch-variables': => openInPane new VarWatchView(@gdb)
 
@@ -55,8 +60,8 @@ module.exports = AtomGdbDebugger =
         else
             @gdb.connect()
                 .then =>
-                    if @panelVisible
-                        @panel.show()
+                    if @panelVisible then @panel.show()
+                    if @cliVisible then @cliPanel.show()
                 .catch (err) =>
                     x = atom.notifications.addError 'Error launching GDB',
                         description: err.toString()
@@ -76,7 +81,9 @@ module.exports = AtomGdbDebugger =
     serialize: ->
           gdbConfig: @gdb.config
           panelVisible: @panelVisible
-          cliSize: @panel.getItem().height()
+          cliVisible: @cliVisible
+          panelSize: @panel.getItem().size()
+          cliSize: @cliPanel.getItem().size()
 
     deactivate: ->
         @statusBarTile?.destroy()
@@ -86,9 +93,9 @@ module.exports = AtomGdbDebugger =
         @subscriptions.dispose()
         @atomGdbDebuggerView.destroy()
 
-    toggle: ->
-        if @panel.isVisible()
-            @panel.hide()
+    toggle: (panel, visibleFlag) ->
+        if panel.isVisible()
+            panel.hide()
         else
-            @panel.show()
-        @panelVisible = @panel.isVisible()
+            panel.show()
+        this[visibleFlag] = panel.isVisible()
