@@ -8,8 +8,6 @@ VarObj = require './varobj'
 
 class GDB
     constructor: ->
-        @state = 'DISCONNECTED'
-        @child = null
         @next_token = 0
         @cmdq = []
         @config = {cmdline: 'gdb', cwd: '', file: '', init: ''}
@@ -32,7 +30,9 @@ class GDB
         @emitter.on 'async-status', cb
 
     connect: ->
-        if @child? then @child.kill()
+        if @child?
+            @exec._disconnected()
+            @child.kill()
         {cmdline, cwd, file, init} = @config
         # Spawn the GDB child process and connect up event handlers
         bufferedProcess
