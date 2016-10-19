@@ -91,8 +91,8 @@ class ConfigView extends View
         cf.file = @file
         cf.init = @init.val()
         cf.isRemote = @isRemote.prop 'checked'
-        @gdb.connect()
         @panel.destroy()
+        atom.commands.dispatch atom.views.getView(atom.workspace), 'atom-gdb-debugger:connect'
 
     _setFile: (path) ->
         if not path? or path == ''

@@ -73,7 +73,7 @@ class Exec
                 threads.splice index, 1
             when 'thread-group-exited'
                 delete @threadGroups[results.id]
-                if Object.keys(@threadGroups).length == 0
+                if Object.keys(@threadGroups).length == 0 and @state != 'DISCONNECTED'
                     @_setState 'EXITED'
 
     _connected: ->

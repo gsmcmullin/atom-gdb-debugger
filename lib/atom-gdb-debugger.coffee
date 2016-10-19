@@ -81,25 +81,18 @@ module.exports = AtomGdbDebugger =
             @breakMarks[id] = decorate bkpt.fullname, bkpt.line,
                     type: 'line-number', class: 'gdb-bkpt'
 
-        # Register command that toggles this view
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:configure': =>
-            new ConfigView(@gdb)
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:connect': =>
-            if @gdb.config.file == ''
-                new ConfigView(@gdb)
-            else
-                @gdb.connect()
-
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:continue': =>
-            @gdb.exec.continue()
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:step': =>
-            @gdb.exec.step()
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:next': =>
-            @gdb.exec.next()
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:finish': =>
-            @gdb.exec.finish()
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:interrupt': =>
-            @gdb.exec.interrupt()
+        @subscriptions.add atom.commands.add 'atom-workspace',
+            'atom-gdb-debugger:configure': => new ConfigView(@gdb)
+            'atom-gdb-debugger:connect': => @connect()
+            'atom-gdb-debugger:continue': => @gdb.exec.continue()
+            'atom-gdb-debugger:step': => @gdb.exec.step()
+            'atom-gdb-debugger:next': => @gdb.exec.next()
+            'atom-gdb-debugger:finish': => @gdb.exec.finish()
+            'atom-gdb-debugger:interrupt': => @gdb.exec.interrupt()
+            'atom-gdb-debugger:backtrace': => new BacktraceView(@gdb)
+            'atom-gdb-debugger:toggle-panel': => @toggle()
+            'atom-gdb-debugger:open-mi-log': => openInPane new GdbMiView(@gdb)
+            'atom-gdb-debugger:watch-variables': => openInPane new VarWatchView(@gdb)
 
         @subscriptions.add atom.commands.add 'atom-text-editor', 'atom-gdb-debugger:toggle-breakpoint': (ev) =>
             editor = ev.target.component.editor
@@ -107,16 +100,22 @@ module.exports = AtomGdbDebugger =
             file = editor.getBuffer().getPath()
             @gdb.breaks.toggle(file, row+1)
 
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:backtrace': =>
-            new BacktraceView(@gdb)
-
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:toggle-panel': => @toggle()
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:open-mi-log': =>
-            openInPane new GdbMiView(@gdb)
-        @subscriptions.add atom.commands.add 'atom-workspace', 'atom-gdb-debugger:watch-variables': =>
-            openInPane new VarWatchView(@gdb)
-
         @subscriptions.add atom.workspace.observeTextEditors @hookEditor.bind(this)
+
+    connect: ->
+        if @gdb.config.file == ''
+            new ConfigView(@gdb)
+        else
+            @gdb.connect()
+                .catch (err) =>
+                    x = atom.notifications.addError 'Error launching GDB',
+                        description: err.toString()
+                        buttons: [
+                            text: 'Reconfigure'
+                            onDidClick: =>
+                                x.dismiss()
+                                new ConfigView(@gdb)
+                        ]
 
     consumeStatusBar: (statusBar) ->
         StatusView = require './status-view'

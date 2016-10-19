@@ -1,4 +1,5 @@
-{Emitter, BufferedProcess} = require 'atom'
+{Emitter} = require 'atom'
+bufferedProcess = require './buffered-process'
 {Parser} = require './gdbmi.js'
 Exec = require './exec'
 Breaks = require './breaks'
@@ -34,23 +35,26 @@ class GDB
         if @child? then @child.kill()
         {cmdline, cwd, file, init} = @config
         # Spawn the GDB child process and connect up event handlers
-        @child = new BufferedProcess
-            command: cmdline
-            args: ['-n', '--interpreter=mi']
-            stdout: @_raw_output_handler.bind(this)
-            stderr: @_raw_output_handler.bind(this)
-            exit: @_child_exited.bind(this)
-        @child.onWillThrowError (x) =>
-            @emitter.emit 'console-output', ['LOG', x.error.toString()+'\n']
-            @_child_exited()
-            x.handle()
-        @exec._connected()
-        @send_mi "-gdb-set confirm off"
-        if cwd?
-            @send_mi "-environment-cd #{cstr(cwd)}"
-        @send_mi "-file-exec-and-symbols #{cstr(file)}"
-        for cmd in init.split '\n'
-            @send_cli cmd
+        bufferedProcess
+                command: cmdline
+                args: ['-n', '--interpreter=mi']
+                stdout: @_line_output_handler.bind(this)
+                exit: @_child_exited.bind(this)
+            .then (@child) =>
+                @send_mi "-gdb-set confirm off"
+            .then =>
+                if cwd?
+                    @send_mi "-environment-cd #{cstr(cwd)}"
+            .then =>
+                @send_mi "-file-exec-and-symbols #{cstr(file)}"
+            .then =>
+                @exec._connected()
+                Promise.all(@send_cli cmd for cmd in init.split '\n')
+            .catch (err) =>
+                @exec._disconnected()
+                @child.kill()
+                delete @child
+                throw err
 
     disconnect: ->
         # Politely request the GDB child process to exit
@@ -59,11 +63,6 @@ class GDB
         if @exec.state == 'RUNNING'
             @exec.interrupt()
         @send_mi '-gdb-exit'
-
-    _raw_output_handler: (data) ->
-        lines = data.split('\n').slice(0, -1)
-        for line in lines
-            @_line_output_handler line
 
     _line_output_handler: (line) ->
         # Handle line buffered output from GDB child process
@@ -116,7 +115,7 @@ class GDB
         c = @cmdq[0]
         if not c? then return
         @emitter.emit 'gdbmi-raw', c.cmd
-        @child.process.stdin.write c.cmd + '\n'
+        @child.stdin c.cmd
 
     _flush_queue: ->
         for c in @cmdq
