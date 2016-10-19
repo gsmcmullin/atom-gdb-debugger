@@ -151,12 +151,15 @@ module.exports = AtomGdbDebugger =
         timeout = null
         el = ed.editorElement
         hover = (ev) =>
-            screenPosition = el.component.screenPositionForMouseEvent ev
-            bufferPosition = ed.bufferPositionForScreenPosition screenPosition
-            buffer = ed.getBuffer()
-            line = buffer.lineForRow bufferPosition.row
-            cident = cidentFromLine line, bufferPosition.column
-            if not cident? or cident == '' then return
+            try
+                screenPosition = el.component.screenPositionForMouseEvent ev
+                bufferPosition = ed.bufferPositionForScreenPosition screenPosition
+                buffer = ed.getBuffer()
+                line = buffer.lineForRow bufferPosition.row
+                cident = cidentFromLine line, bufferPosition.column
+                if not cident? or cident == '' then return
+            catch
+                return
             @gdb.varobj.evalExpression cident
                 .then (val) ->
                     atom.notifications.addInfo "`#{cident} = #{val}`"
