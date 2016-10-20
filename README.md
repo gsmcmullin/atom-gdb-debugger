@@ -25,7 +25,6 @@ stop by the Gitter channel and let us know what you think.
 * `F10` Single step, over function calls (`next`)
 * `F11` Single step, into function calls (`step`)
 * `Shift-F11` Resume until return  of current function (`finish`)
-* `Ctrl-K B` Show stack backtrace (`backtrace`)
 
 ## Installation
 

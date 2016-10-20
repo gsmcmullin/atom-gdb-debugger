@@ -2,7 +2,6 @@ GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
 GDB = require './gdb'
 DebugPanelView = require './debug-panel-view'
-BacktraceView = require './backtrace-view'
 ConfigView = require './config-view'
 Resizable = require './resizable'
 GdbCliView = require './gdb-cli-view'
@@ -46,7 +45,6 @@ module.exports = AtomGdbDebugger =
             'atom-gdb-debugger:next': => @cmdWrap => @gdb.exec.next()
             'atom-gdb-debugger:finish': => @cmdWrap => @gdb.exec.finish()
             'atom-gdb-debugger:interrupt': => @cmdWrap => @gdb.exec.interrupt()
-            'atom-gdb-debugger:backtrace': => new BacktraceView(@gdb)
             'atom-gdb-debugger:toggle-panel': => @toggle(@panel, 'panelVisible')
             'atom-gdb-debugger:toggle-cli': => @toggle(@cliPanel, 'cliVisible')
             'atom-gdb-debugger:open-mi-log': => openInPane new GdbMiView(@gdb)

@@ -1,27 +1,35 @@
-{SelectListView, $$} = require 'atom-space-pen-views'
+{View, $, $$} = require 'atom-space-pen-views'
 {formatFrame} = require './utils'
 
 module.exports =
-class BacktraceView extends SelectListView
-    initialize: (gdb) ->
-        super
-        @gdb = gdb
+class BacktraceView extends View
+    initialize: (@gdb) ->
+        @gdb.exec.onStateChanged ([state, frame]) =>
+            if state == 'STOPPED'
+                @level = 0
+                @update()
+            else
+                @empty()
+
+    @content: ->
+        @ul class: 'list-tree'
+
+    render: (frames) ->
+        @empty()
+        for frame in frames
+            @append $$ ->
+                @li class: 'list-item', 'data-id': frame.level, =>
+                    @span formatFrame(frame), class: 'no-icon'
+        @find('li').on 'dblclick', (ev) => @frameClicked(ev)
+        @find("li[data-id=#{@level}]").addClass 'selected'
+
+    update: ->
         @gdb.exec.backtrace()
-            .then (frames) =>
-                @setItems frames
-                @panel = atom.workspace.addModalPanel(item: this)
-                @panel.show()
-                @focusFilterEditor()
-            .catch () ->
+            .then @render.bind(this)
 
-    getFilterKey: () -> 'func'
-
-    viewForItem: (item) ->
-        "<li>#{formatFrame(item)}</li>"
-
-    cancel: ->
-        @panel.destroy()
-
-    confirmed: (item) ->
-        @gdb.exec.selectFrame(item.level)
-        @panel.destroy()
+    frameClicked: (ev) ->
+        console.log ev
+        level = ev.currentTarget.getAttribute 'data-id'
+        @gdb.exec.selectFrame level
+            .then =>
+                @level = level
