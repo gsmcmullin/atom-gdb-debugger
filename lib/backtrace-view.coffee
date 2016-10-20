@@ -12,7 +12,7 @@ class BacktraceView extends View
                 @empty()
 
     @content: ->
-        @ul class: 'list-tree'
+        @ul id: 'backtrace', class: 'list-tree'
 
     render: (frames) ->
         @empty()
@@ -21,7 +21,7 @@ class BacktraceView extends View
                 @li class: 'list-item', 'data-id': frame.level, =>
                     @span formatFrame(frame), class: 'no-icon'
         @find('li').on 'dblclick', (ev) => @frameClicked(ev)
-        @find("li[data-id=#{@level}]").addClass 'selected'
+        @find("li[data-id=#{@level}]").addClass 'selected-frame'
 
     update: ->
         @gdb.exec.backtrace()

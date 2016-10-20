@@ -22,9 +22,11 @@
     position: relative;
     height: 100%;
     overflow-y: scroll;
+    overflow-x: hidden;
     pre, code {
         background: transparent;
         padding: 0;
+        overflow-x: hidden;
     }
     .gdb-cli-input {
         white-space: nowrap;
@@ -57,16 +59,14 @@
 }
 
 .var-watch-view {
-    padding: 8px;
-    background: @pane-item-background-color;
-
     .var-watch-tree {
         padding: 0 8px 2px 8px;
         background-color: @tree-view-background-color;
         border: 1px solid @tree-view-border-color;
     }
     table {
-        line-height: 2em
+        line-height: 2em;
+        width: 100%;
     }
     th, td {
         padding: 0 0.4em 0 0.4em;
@@ -94,7 +94,7 @@
     }
 
     input#value {
-        width: 7em;
+        width: 100%;
     }
     input#value.changed {
         color: @text-color-error;
@@ -129,4 +129,32 @@
     .gdb-resize-grip.bottom { bottom: -5px; }
     .gdb-resize-grip.left { left: -5px; }
     .gdb-resize-grip.right { right: -5px; }
+}
+
+#backtrace .selected-frame {
+    background-color: @background-color-highlight;
+}
+
+.debug-subpanel {
+    border-bottom: 1px solid black;
+    position: relative;
+    .header {
+        color: #D9DBDE;
+        padding-left: 2em;
+        line-height: 2em;
+        background-color: #303337;
+        cursor: default;
+        border: solid #111314;
+        border-width: 1px 0 1px 0;
+        font-weight: bold;
+    }
+    .header::before {
+        font-family: 'Octicons Regular';
+        content: @chevron-down;
+        position: absolute;
+        left: 1em;
+    }
+    .header.collapsed::before {
+        content: @chevron-right;
+    }
 }
