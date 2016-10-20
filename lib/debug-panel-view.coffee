@@ -6,8 +6,17 @@ BacktraceView = require './backtrace-view'
 class SubPanel extends View
     @content: (header, child)->
         @div class: 'debug-subpanel', =>
-            @div header, class: 'header'
+            @div header, class: 'header', click: 'toggleChild', outlet: 'header'
             @subview 'child', => child
+
+    toggleChild: ->
+        if @child().css('display') == 'none'
+            @child().show()
+            @header.removeClass 'collapsed'
+        else
+            @child().hide()
+            @header.addClass 'collapsed'
+
 
 module.exports =
 class DebugPanelView extends View
