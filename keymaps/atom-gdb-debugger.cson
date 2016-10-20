@@ -15,6 +15,5 @@
   'f11': 'atom-gdb-debugger:step'
   'shift-f11': 'atom-gdb-debugger:finish'
   'ctrl-k b': 'atom-gdb-debugger:backtrace'
-  'ctrl-k w': 'atom-gdb-debugger:watch-variables'
 'atom-text-editor':
   'f9': 'atom-gdb-debugger:toggle-breakpoint'

@@ -50,7 +50,6 @@ module.exports = AtomGdbDebugger =
             'atom-gdb-debugger:toggle-panel': => @toggle(@panel, 'panelVisible')
             'atom-gdb-debugger:toggle-cli': => @toggle(@cliPanel, 'cliVisible')
             'atom-gdb-debugger:open-mi-log': => openInPane new GdbMiView(@gdb)
-            'atom-gdb-debugger:watch-variables': => openInPane new VarWatchView(@gdb)
 
         @editorIntegration = new EditorIntegration(@gdb)
 
@@ -58,6 +57,7 @@ module.exports = AtomGdbDebugger =
         cmd()
             .catch (err) =>
                 atom.notifications.addError err.toString()
+
     connect: ->
         if @gdb.config.file == ''
             new ConfigView(@gdb)
