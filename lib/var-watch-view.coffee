@@ -9,11 +9,12 @@ class VarItemView extends View
             @find('input#wp-toggle').prop('checked', true)
 
     @content: (gdb, item) ->
-        if item.numchild > 0 then cls = 'collapsable'
-        @tr name: item.name, parent: item.parent, class: cls, =>
+        @tr name: item.name, parent: item.parent, =>
             @td class: 'expand-column', click: 'toggleCollapse', =>
                 @span item.exp,
                     style: "margin-left: #{item.nest}em"
+                @span ' '
+                @span '0', class: 'badge'
             if +item.numchild == 0
                 @td =>
                     @input
@@ -135,18 +136,20 @@ class VarWatchView extends View
     _addItem: (id, val) ->
         view = @varviews[id] = new VarItemView(@gdb, val)
         if not val.parent?
-            return @table.append view
-        lastName = @_findLast val.parent
-        view.insertAfter @varviews[lastName]
+            @table.append view
+        else
+            lastName = @_findLast val.parent
+            view.insertAfter @varviews[lastName]
+        view
 
     _varObserver: (id, val) ->
         view = @varviews[id]
-        if not view? and val?
-            return @_addItem id, val
         if not val?
             view.remove()
             delete @varviews[id]
             return
+        if not view?
+            view = @_addItem id, val
         v = view.find('input#value')
         if v.val() != val.value
             v.val val.value
@@ -155,8 +158,19 @@ class VarWatchView extends View
                 @varviews[id].find('input#value').addClass 'changed'
         wp = view.find('input#wp-toggle')
         wp.prop 'checked', val.watchpoint?
+        badge = view.find('.badge')
+        if val.times?
+            badge.show()
+            if val.times != badge.text()
+                badge.addClass 'badge-info'
+            badge.text val.times
+        else
+            badge.text '0'
+            badge.hide()
+        if +val.numchild > 0
+            view.addClass('collapsable')
 
     _execStateChanged: ([state, frame]) ->
         if state == 'RUNNING'
-            v = @find('input#value.changed')
-            v.removeClass 'changed'
+            @find('.changed').removeClass 'changed'
+            @find('.badge-info').removeClass('badge-info')

@@ -55,6 +55,7 @@ class VarObj
             .then (wp) =>
                 v = @vars[name]
                 v.watchpoint = wp
+                v.times = '0'
                 @watchpoints[wp] = name
                 @_notifyObservers name, v
 
@@ -64,6 +65,7 @@ class VarObj
             .then =>
                 v = @vars[name]
                 delete v.watchpoint
+                delete v.times
                 delete @watchpoints[wp]
                 @_notifyObservers name, v
 
@@ -135,12 +137,17 @@ class VarObj
         if @watchpoints[id]? and not bkpt?
             vo = @vars[@watchpoints[id]]
             delete vo.watchpoint
+            delete vo.times
             delete @watchpoints[id]
             @_notifyObservers vo.name, vo
+        if v = @vars[@watchpoints[id]]
+            v.times = bkpt.times
+            @_notifyObservers v.name, v
         if bkpt? and not @watchpoints[id] and bkpt.type.endsWith('watchpoint')
             @add bkpt.what
                 .then (v) =>
                     v.watchpoint = bkpt.number
+                    v.times = bkpt.times
                     @watchpoints[bkpt.number] = v.name
                     @_notifyObservers v.name, v
 

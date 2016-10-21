@@ -85,14 +85,14 @@ td span.delete::before {
         border: 1px solid @tree-view-border-color;
     }
 
-    tr.collapsable td.expand-column span::before {
+    tr.collapsable td.expand-column span:first-child::before {
         font-family: 'Octicons Regular';
         content: @chevron-down;
         position: absolute;
         left: 0;
     }
 
-    tr.collapsable.collapsed td.expand-column span::before {
+    tr.collapsable.collapsed td.expand-column span:first-child::before {
         content: @chevron-right;
     }
 

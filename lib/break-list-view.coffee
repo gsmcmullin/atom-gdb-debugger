@@ -8,13 +8,15 @@ class BreakView extends View
             @td class: 'expand-column', =>
                 @span outlet: 'what'
                 @span ' '
-                @span outlet: 'times', class: 'badge'
+                @span '0', outlet: 'times', class: 'badge'
             @td style: 'width: 100%'
             @td click: '_remove', =>
                 @span class: 'delete'
 
     update: ({func, file, line, times}) ->
         @what.text "in #{func} () at #{file}:#{line}"
+        if @times.text() != times
+            @times.addClass 'badge-info'
         @times.text times
 
     _remove: ->
@@ -24,6 +26,7 @@ module.exports =
 class BreakListView extends View
     initialize: (@gdb) ->
         @gdb.breaks.observe @breakpointObserver.bind(this)
+        @gdb.exec.onStateChanged @_execStateChanged.bind(this)
         @items = {}
 
     @content: ->
@@ -48,3 +51,8 @@ class BreakListView extends View
             return
         view = @findOrCreate(id)
         view.update bkpt
+
+    _execStateChanged: ([state, frame]) ->
+        if state == 'RUNNING'
+            v = @find('.badge-info')
+            v.removeClass 'badge-info'
