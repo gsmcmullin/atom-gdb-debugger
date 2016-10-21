@@ -19,7 +19,7 @@ class BufferedProcess
             @process.stdout.once 'data', ok
             @process.once 'error', error
 
-            @process.on 'exit', => @exit
+            @process.on 'exit', => @exit()
 
     stdin: (line) ->
         @process.stdin.write line + '\n'
