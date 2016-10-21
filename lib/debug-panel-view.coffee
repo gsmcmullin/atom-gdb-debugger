@@ -2,6 +2,7 @@
 GdbToolbarView = require './gdb-toolbar-view'
 VarWatchView = require './var-watch-view'
 BacktraceView = require './backtrace-view'
+BreakListView = require './break-list-view'
 
 class SubPanel extends View
     @content: (header, child)->
@@ -17,11 +18,11 @@ class SubPanel extends View
             @child().hide()
             @header.addClass 'collapsed'
 
-
 module.exports =
 class DebugPanelView extends View
     @content: (gdb) ->
         @div =>
             @subview 'toolbar', new GdbToolbarView(gdb)
             @subview 'watch', new SubPanel 'Watch Variables', new VarWatchView(gdb)
+            @subview 'breakpoints', new SubPanel 'Breakpoints', new BreakListView(gdb)
             @subview 'backtrace', new SubPanel 'Call Stack', new BacktraceView(gdb)

@@ -58,23 +58,31 @@
     }
 }
 
-.var-watch-view {
-    .var-watch-tree {
-        padding: 0 8px 2px 8px;
-        background-color: @tree-view-background-color;
-        border: 1px solid @tree-view-border-color;
-    }
-    table {
-        line-height: 2em;
-        width: 100%;
-    }
-    th, td {
-        padding: 0 0.4em 0 0.4em;
-    }
-
-    td.expand-column span {
+table {
+    line-height: 2em;
+    width: 100%;
+}
+th, td {
+    padding: 0 0.5em 0 0.5em;
+    white-space: nowrap;
+}
+td.expand-column {
+    padding-left: 1em;
+    span:first-child {
         padding-left: 1em;
         position: relative;
+    }
+}
+td span.delete::before {
+    font-family: 'Octicons Regular';
+    content: @x;
+}
+
+.var-watch-view {
+    .var-watch-tree {
+        padding-bottom: 2px;
+        background-color: @tree-view-background-color;
+        border: 1px solid @tree-view-border-color;
     }
 
     tr.collapsable td.expand-column span::before {
@@ -86,11 +94,6 @@
 
     tr.collapsable.collapsed td.expand-column span::before {
         content: @chevron-right;
-    }
-
-    td span.delete::before {
-        font-family: 'Octicons Regular';
-        content: @x;
     }
 
     input#value {
@@ -156,5 +159,13 @@
     }
     .header.collapsed::before {
         content: @chevron-right;
+    }
+}
+
+#break-list {
+    width: 100%;
+    line-height: 2em;
+    td.func {
+        padding-left: 2em;
     }
 }

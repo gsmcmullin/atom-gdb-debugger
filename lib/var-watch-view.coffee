@@ -23,7 +23,7 @@ class VarItemView extends View
                         click: '_toggleWP'
             else
                 @td()
-            @td =>
+            @td style: 'width: 100%', =>
                 @input
                     id: 'value'
                     class: 'input-text native-key-bindings'
