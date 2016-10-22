@@ -1,14 +1,35 @@
 {Emitter, Disposable, CompositeDisposable} = require 'atom'
+_ = require 'underscore'
 
-class Breaks
+class Breakpoint
+    constructor: (@gdb, bkpt) ->
+        @emitter = new Emitter
+        _.extend this, bkpt
+
+    onChanged: (cb) ->
+        @emitter.on 'changed', cb
+    onDeleted: (cb) ->
+        @emitter.on 'deleted', cb
+
+    remove: ->
+        @gdb.send_mi "-break-delete #{@number}"
+            .then => @_deleted()
+
+    _changed: (bkpt) ->
+        _.extend this, bkpt
+        @emitter.emit 'changed'
+
+    _deleted: ->
+        @emitter.emit 'deleted'
+
+module.exports =
+class BreakpointManager
     constructor: (@gdb) ->
         @breaks = {}
         @observers = []
-        @emitter = new Emitter
         @subscriptions = new CompositeDisposable
-        @subscriptions.add @gdb.onAsyncNotify(@_onNotify.bind(this))
+        @subscriptions.add @gdb.onAsyncNotify(@_onAsyncNotify.bind(this))
         @subscriptions.add @gdb.exec.onStateChanged @_onStateChanged.bind(this)
-        @observe @_selfObserve.bind(this)
 
     observe: (cb) ->
         for id, bkpt of @breaks
@@ -20,49 +41,42 @@ class Breaks
     insert: (pos) ->
         @gdb.send_mi "-break-insert #{pos}"
             .then ({bkpt}) =>
-                @_notifyObservers bkpt.number, bkpt
+                @_add bkpt
 
-    insertWatch: (expr) ->
+    insertWatch: (expr, hook) ->
         @gdb.send_mi "-break-watch #{expr}"
-            .then ({wpt}) ->
-                return wpt.number
-
-    remove: (id) ->
-        @gdb.send_mi "-break-delete #{id}"
-            .then () =>
-                @_notifyObservers id
+            .then ({wpt}) =>
+                if hook? then hook(wpt.number)
+                @gdb.send_mi "-break-info #{wpt.number}"
+            .then (results) =>
+                @_add results.BreakpointTable.body.bkpt[0]
 
     toggle: (file, line) ->
         for id, bkpt of @breaks
             if bkpt.fullname == file and +bkpt.line == line
-                @remove id
+                bkpt.remove()
                 removed = true
         if not removed
             @insert "#{file}:#{line}"
 
-    _notifyObservers: (id, bkpt) ->
+    _add: (bkpt) ->
+        bkpt = @breaks[bkpt.number] = new Breakpoint(@gdb, bkpt)
+        bkpt.onDeleted => delete @breaks[bkpt.number]
         for cb in @observers
-            cb id, bkpt
+            cb bkpt.number, bkpt
 
-    _onNotify: ([cls, results]) ->
+    _onAsyncNotify: ([cls, {id, bkpt}]) ->
         switch cls
-            when 'breakpoint-deleted'
-                @_notifyObservers results.id
             when 'breakpoint-created'
-                @_notifyObservers results.bkpt.number, results.bkpt
+                @_add bkpt
             when 'breakpoint-modified'
-                @_notifyObservers results.bkpt.number, results.bkpt
+                @breaks[bkpt.number]._changed(bkpt)
+            when 'breakpoint-deleted'
+                @breaks[id]._deleted()
+                delete @breaks[id]
 
     _onStateChanged: ([state]) ->
         if state == 'DISCONNECTED'
             for id, bkpt of @breaks
-                @_notifyObservers id
+                bkpt._deleted()
             @breaks = {}
-
-    _selfObserve: (id, bkpt) ->
-        if not bkpt?
-            delete @breaks[id]
-            return
-        @breaks[id] = bkpt
-
-module.exports = Breaks

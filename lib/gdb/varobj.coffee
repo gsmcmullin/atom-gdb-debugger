@@ -51,23 +51,11 @@ class VarObj
     setWatch: (name) ->
         @getExpression name
             .then (expr) =>
-                @gdb.breaks.insertWatch expr
-            .then (wp) =>
-                v = @vars[name]
-                v.watchpoint = wp
-                v.times = '0'
-                @watchpoints[wp] = name
-                @_notifyObservers name, v
+                @gdb.breaks.insertWatch expr, (number) =>
+                    @watchpoints[number] = name
 
     clearWatch: (name) ->
-        wp = @vars[name].watchpoint
-        @gdb.breaks.remove wp
-            .then =>
-                v = @vars[name]
-                delete v.watchpoint
-                delete v.times
-                delete @watchpoints[wp]
-                @_notifyObservers name, v
+         @vars[name].watchpoint.remove()
 
     _removeVar: (name) ->
         # Remove from roots or parent's children
@@ -134,21 +122,27 @@ class VarObj
         result
 
     _breakObserver: (id, bkpt) ->
-        if @watchpoints[id]? and not bkpt?
-            vo = @vars[@watchpoints[id]]
-            delete vo.watchpoint
-            delete vo.times
-            delete @watchpoints[id]
-            @_notifyObservers vo.name, vo
-        if v = @vars[@watchpoints[id]]
-            v.times = bkpt.times
+        if not bkpt.type.endsWith('watchpoint')
+            return
+
+        if @watchpoints[id]?
+            # Already set by our hook function
+            p = Promise.resolve @vars[@watchpoints[id]]
+        else
+            # We don't know about this, create a new var obj
+            p = @add bkpt.what
+
+        p.then (v) =>
+            @watchpoints[bkpt.number] = v.name
+            v.watchpoint = bkpt
             @_notifyObservers v.name, v
-        if bkpt? and not @watchpoints[id] and bkpt.type.endsWith('watchpoint')
-            @add bkpt.what
-                .then (v) =>
-                    v.watchpoint = bkpt.number
-                    v.times = bkpt.times
-                    @watchpoints[bkpt.number] = v.name
-                    @_notifyObservers v.name, v
+            bkpt.onDeleted =>
+                delete v.watchpoint
+                delete v.times
+                delete @watchpoints[id]
+                @_notifyObservers v.name, v
+            bkpt.onChanged =>
+                v.times = bkpt.times
+                @_notifyObservers v.name, v
 
 module.exports = VarObj

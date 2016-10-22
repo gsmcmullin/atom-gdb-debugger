@@ -1,7 +1,10 @@
 {View, $$} = require 'atom-space-pen-views'
 
 class BreakView extends View
-    initialize: (@gdb, @id) ->
+    initialize: (@bkpt) ->
+        @bkpt.onDeleted => @remove()
+        @bkpt.onChanged => @update()
+        @update()
 
     @content: ->
         @tr =>
@@ -13,44 +16,30 @@ class BreakView extends View
             @td click: '_remove', =>
                 @span class: 'delete'
 
-    update: ({func, file, line, times}) ->
+    update: ->
+        {func, file, line, times} = @bkpt
         @what.text "in #{func} () at #{file}:#{line}"
         if @times.text() != times
             @times.addClass 'badge-info'
         @times.text times
 
     _remove: ->
-        @gdb.breaks.remove @id
+        @bkpt.remove()
 
 module.exports =
 class BreakListView extends View
     initialize: (@gdb) ->
         @gdb.breaks.observe @breakpointObserver.bind(this)
         @gdb.exec.onStateChanged @_execStateChanged.bind(this)
-        @items = {}
 
     @content: ->
         @table id: 'break-list', class: 'list-tree', =>
 
-    findOrCreate: (id) ->
-        if @items[id]?
-            return @items[id]
-        view = @items[id] = new BreakView @gdb, id
-        @append view
-        return view
-
     breakpointObserver: (id, bkpt) ->
-        if not bkpt?
-            # Remove deleted breakpoints
-            if @items[id]?
-                @items[id].remove()
-                delete @items[id]
-            return
         # Don't show watchpoints in here
         if not bkpt.type.endsWith 'breakpoint'
             return
-        view = @findOrCreate(id)
-        view.update bkpt
+        @append new BreakView bkpt
 
     _execStateChanged: ([state, frame]) ->
         if state == 'RUNNING'

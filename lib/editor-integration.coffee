@@ -30,7 +30,7 @@ class EditorIntegration
         @subscriptions = new CompositeDisposable
 
         @subscriptions.add @gdb.exec.onStateChanged @_execStateChanged
-        @subscriptions.add @gdb.breaks.observe @_breakpointChanged
+        @subscriptions.add @gdb.breaks.observe @_breakpointCreated
 
         @subscriptions.add atom.commands.add 'atom-text-editor',
             'atom-gdb-debugger:toggle-breakpoint': @_toggleBreakpoint
@@ -61,15 +61,16 @@ class EditorIntegration
                     current frame.  This may be because the function is part
                     of a external included library."
 
-    _breakpointChanged: (id, bkpt) =>
-        if @breakMarks[id]?
-            @breakMarks[id].then (mark) =>
-                    mark.destroy()
-                .catch () ->
-            delete @breakMarks[id]
-        if not bkpt? or not bkpt.fullname? then return
-        @breakMarks[id] = decorate bkpt.fullname, bkpt.line,
+    _breakpointCreated: (id, bkpt) =>
+        {fullname, line} = bkpt
+        if not fullname? then return
+        decorate fullname, line,
                 type: 'line-number', class: 'gdb-bkpt'
+            .then (mark) =>
+                bkpt.onChanged =>
+                    mark.setBufferRange [[line-1, 0], [line-1, 0]]
+                bkpt.onDeleted =>
+                    mark.destroy()
 
     _hookEditor: (ed) =>
         timeout = null
