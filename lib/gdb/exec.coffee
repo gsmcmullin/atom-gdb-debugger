@@ -1,4 +1,4 @@
-{Emitter, CompositeDisposable} = require 'atom'
+{Emitter, CompositeDisposable} = require 'event-kit'
 
 class Exec
     constructor: (@gdb) ->

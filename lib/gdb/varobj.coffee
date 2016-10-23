@@ -1,4 +1,4 @@
-{Emitter, Disposable, CompositeDisposable} = require 'atom'
+{Emitter, Disposable, CompositeDisposable} = require 'event-kit'
 {cstr} = require './utils'
 
 class VarObj

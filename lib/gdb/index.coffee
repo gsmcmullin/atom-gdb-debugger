@@ -1,5 +1,5 @@
 {bufferedProcess, cstr} = require './utils'
-{Emitter} = require 'atom'
+{Emitter} = require 'event-kit'
 {Parser} = require './gdbmi.js'
 Exec = require './exec'
 Breaks = require './breaks'
