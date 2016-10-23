@@ -23,7 +23,7 @@ class ThreadStackView extends View
         if selected?
             view.find("li[thread-id=#{selected}]").addClass 'selected'
         view.find("li>div").on 'click', (ev) =>
-            li = $(ev.target).parent()
+            li = $(ev.currentTarget).parent()
             li.toggleClass 'collapsed'
             if not li.hasClass('collapsed') and li.find('ul').length == 0
                 thread = li.attr 'thread-id'
@@ -42,7 +42,7 @@ class ThreadStackView extends View
         if selected?
             view.find("li[frame-id=#{selected}]").addClass 'selected'
         view.find("li>div").on 'click', (ev) =>
-            li = $(ev.target).parent()
+            li = $(ev.currentTarget).parent()
             li.toggleClass 'collapsed'
             if not li.hasClass('collapsed') and li.find('ul').length == 0
                 thread = li.parent().closest('li').attr 'thread-id'
