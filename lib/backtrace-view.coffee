@@ -11,37 +11,53 @@ class BacktraceView extends View
                 @empty()
 
     @content: ->
-        @ul id: 'backtrace', class: 'list-tree'
+        @div id: 'backtrace'
 
     renderThreads: (threads, selected) ->
         view = $$ ->
-            @ul class: 'list-tree', =>
+            @ul class: 'list-tree has-collapsable-children', =>
                 for thread in threads
-                    @li class: 'list-nested-item', 'thread-id': thread.id, =>
+                    @li class: 'list-nested-item collapsed', 'thread-id': thread.id, =>
                         @div class: 'list-item', =>
-                            @span thread['target-id'], class: 'no-icon'
+                            @span thread['target-id']
         if selected?
-            view.find("li[thread-id=#{selected}]>div").addClass 'selected-row'
+            view.find("li[thread-id=#{selected}]").addClass 'selected'
+        view.find("li>div").on 'click', (ev) =>
+            li = $(ev.target).parent()
+            li.toggleClass 'collapsed'
+            if not li.hasClass('collapsed') and li.find('ul').length == 0
+                thread = li.attr 'thread-id'
+                @gdb.exec.getFrames thread
+                    .then (frames) =>
+                        li.append @renderFrames frames
         view
 
     renderFrames: (frames, selected) ->
         view = $$ ->
             @ul class: 'list-tree', =>
                 for frame in frames
-                    @li class: 'list-nested-item', 'frame-id': frame.level, =>
+                    @li class: 'list-nested-item collapsed', 'frame-id': frame.level, =>
                         @div class: 'list-item', =>
-                            @span formatFrame(frame), class: 'no-icon'
-        #@find('div.list-item').on 'dblclick', (ev) => @frameClicked(ev)
+                            @span formatFrame(frame)
         if selected?
-            view.find("li[frame-id=#{selected}]>div").addClass 'selected-row'
+            view.find("li[frame-id=#{selected}]").addClass 'selected'
+        view.find("li>div").on 'click', (ev) =>
+            li = $(ev.target).parent()
+            li.toggleClass 'collapsed'
+            if not li.hasClass('collapsed') and li.find('ul').length == 0
+                thread = li.parent().closest('li').attr 'thread-id'
+                frame = li.attr 'frame-id'
+                @gdb.exec.getLocals thread, frame
+                    .then (locals) =>
+                        li.append @renderLocals locals
         view
 
     renderLocals: (locals) ->
         view = $$ ->
             @ul class: 'list-tree', =>
                 for {name, value} in locals
-                    @li class: 'list-item', =>
-                        @span "#{name} = #{value}", class: 'no-icon'
+                    @li class: 'list-item locals', =>
+                        @span "#{name} = #{value}"
 
     update: ->
         @empty()
@@ -49,14 +65,17 @@ class BacktraceView extends View
             .then (results) =>
                 @selectedThread = results['current-thread-id']
                 @append @renderThreads results.threads, results['current-thread-id']
-                @gdb.exec.backtrace @selectedThread
+                @gdb.exec.getFrames @selectedThread
             .then (frames) =>
                 @selectedFrame = 0
-                @find("li[thread-id=#{@selectedThread}]").append @renderFrames frames, @selectedFrame
+                @find("li[thread-id=#{@selectedThread}]")
+                    .removeClass 'collapsed'
+                    .append @renderFrames frames, @selectedFrame
                 @gdb.exec.getLocals @selectedThread, @selectedFrame
             .then (locals) =>
-                @find("li[thread-id=#{@selectedThread}] li[frame-id=#{@selectedFrame}]>div")
-                    .after @renderLocals locals
+                @find("li[thread-id=#{@selectedThread}] li[frame-id=#{@selectedFrame}]")
+                    .removeClass 'collapsed'
+                    .append @renderLocals locals
 
     frameClicked: (ev) ->
         level = ev.currentTarget.getAttribute 'data-id'

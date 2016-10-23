@@ -41,7 +41,7 @@ class Exec
     getThreads: ->
         @gdb.send_mi "-thread-info"
 
-    backtrace: (thread) ->
+    getFrames: (thread) ->
         @gdb.send_mi "-stack-list-frames --thread #{thread}"
             .then (result) ->
                 return result.stack.frame
