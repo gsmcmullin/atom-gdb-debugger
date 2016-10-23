@@ -1,7 +1,7 @@
 {View} = require 'atom-space-pen-views'
 GdbToolbarView = require './gdb-toolbar-view'
 VarWatchView = require './var-watch-view'
-BacktraceView = require './backtrace-view'
+ThreadStackView = require './thread-stack-view'
 BreakListView = require './break-list-view'
 
 class SubPanel extends View
@@ -25,4 +25,4 @@ class DebugPanelView extends View
             @subview 'toolbar', new GdbToolbarView(gdb)
             @subview 'watch', new SubPanel 'Watch Variables', new VarWatchView(gdb)
             @subview 'breakpoints', new SubPanel 'Breakpoints', new BreakListView(gdb)
-            @subview 'backtrace', new SubPanel 'Call Stack', new BacktraceView(gdb)
+            @subview 'stacks', new SubPanel 'Call Stacks', new ThreadStackView(gdb)

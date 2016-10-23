@@ -2,7 +2,7 @@
 {formatFrame} = require './utils'
 
 module.exports =
-class BacktraceView extends View
+class ThreadStackView extends View
     initialize: (@gdb) ->
         @gdb.exec.onStateChanged ([state, frame]) =>
             if state == 'STOPPED'
