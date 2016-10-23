@@ -23,8 +23,10 @@ class VarObj
         return new Disposable () ->
             @observers.splice(@observers.indexOf(cb), 1)
 
-    add: (expr) ->
-        @gdb.send_mi "-var-create - * #{cstr(expr)}"
+    add: (expr, frame='', thread='') ->
+        if thread != '' then thread = "--thread #{thread}"
+        if frame != '' then frame = "--frame #{frame}"
+        @gdb.send_mi "-var-create #{thread} #{frame} - * #{cstr(expr)}"
             .then (result) =>
                 result.exp = expr
                 @_added result

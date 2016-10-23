@@ -56,8 +56,17 @@ class ThreadStackView extends View
         view = $$ ->
             @ul class: 'list-tree', =>
                 for {name, value} in locals
-                    @li class: 'list-item locals', =>
+                    @li class: 'list-item locals', 'data-name': name, =>
                         @span "#{name} = #{value}"
+        view.find('li').on 'dblclick', (ev) =>
+            li = $(ev.currentTarget)
+            exp = li.attr 'data-name'
+            li = li.parent().closest('li')
+            frame = li.attr 'frame-id'
+            li = li.parent().closest('li')
+            thread = li.attr 'thread-id'
+            @gdb.varobj.add exp, frame, thread
+        view
 
     update: ->
         @empty()
