@@ -1,4 +1,7 @@
 # atom-gdb-debugger package
+[![apm](https://img.shields.io/apm/v/atom-gdb-debugger.svg)](https://atom.io/packages/atom-gdb-debugger)
+[![deps](https://david-dm.org/gsmcmullin/atom-gdb-debugger/status.svg)](https://david-dm.org/gsmcmullin/atom-gdb-debugger)
+[![devDeps](https://david-dm.org/gsmcmullin/atom-gdb-debugger/dev-status.svg)](https://david-dm.org/gsmcmullin/atom-gdb-debugger?type=dev)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/atom-gdb-debugger/Lobby)
 
 GDB integration for Atom.
@@ -12,7 +15,7 @@ stop by the Gitter channel and let us know what you think.
 * Show current position in editor
 * Basic run control functions accessible from UI
 * Display breakpoints in editor
-* Backtrace popup allows user to select frame
+* Inspect threads, call stacks and variables
 * Set up a view of target variables
 * Set watchpoints on target variables
 * Assign new values to target variables
