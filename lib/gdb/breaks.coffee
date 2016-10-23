@@ -64,6 +64,7 @@ class BreakpointManager
         bkpt.onDeleted => delete @breaks[bkpt.number]
         for cb in @observers
             cb bkpt.number, bkpt
+        bkpt
 
     _onAsyncNotify: ([cls, {id, bkpt}]) ->
         switch cls

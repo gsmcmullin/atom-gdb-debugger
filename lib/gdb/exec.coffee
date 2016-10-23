@@ -38,16 +38,25 @@ class Exec
                 process.kill group.pid, 'SIGINT'
         Promise.resolve()
 
-    backtrace: () ->
-        @gdb.send_mi '-stack-list-frames'
+    getThreads: ->
+        @gdb.send_mi "-thread-info"
+
+    backtrace: (thread) ->
+        @gdb.send_mi "-stack-list-frames --thread #{thread}"
             .then (result) ->
                 return result.stack.frame
 
-    selectFrame: (level) ->
+    selectFrame: (thread, level) ->
+        @gdb.send_mi "-thread-select #{thread}"
         @gdb.send_mi "-stack-select-frame #{level}"
         @gdb.send_mi "-stack-info-frame"
             .then ({frame}) =>
                 @_setState @state, frame
+
+    getLocals: (thread, level) ->
+        @gdb.send_mi "-stack-list-variables --thread #{thread} --frame #{level} --skip-unavailable --all-values"
+            .then ({variables}) =>
+                variables
 
     _setState: (state, frame) ->
         @state = state
