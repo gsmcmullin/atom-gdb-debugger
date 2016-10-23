@@ -1,5 +1,5 @@
 {Emitter, Disposable, CompositeDisposable} = require 'atom'
-{cstr} = require '../utils'
+{cstr} = require './utils'
 
 class VarObj
     constructor: (@gdb) ->

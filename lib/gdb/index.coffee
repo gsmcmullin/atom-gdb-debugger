@@ -1,10 +1,9 @@
+{bufferedProcess, cstr} = require './utils'
 {Emitter} = require 'atom'
-bufferedProcess = require './buffered-process'
 {Parser} = require './gdbmi.js'
 Exec = require './exec'
 Breaks = require './breaks'
 VarObj = require './varobj'
-{cstr} = require '../utils'
 
 class GDB
     constructor: ->
