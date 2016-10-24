@@ -29,7 +29,7 @@ class Exec
     interrupt: ->
         # Interrupt the target if running
         if @state != 'RUNNING'
-            return Promise.reject 'Target is not running'
+            return Promise.reject new Error('Target is not running')
         # There is no hope here for Windows.  See issue #4
         if @gdb.config.isRemote
             @gdb.child.process.kill 'SIGINT'

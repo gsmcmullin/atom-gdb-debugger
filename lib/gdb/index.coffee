@@ -100,9 +100,9 @@ class GDB
     send_mi: (cmd, quiet) ->
         # Send an MI command to GDB
         if not @child?
-            return Promise.reject 'Not connected'
+            return Promise.reject new Error('Not connected')
         if @exec.state == 'RUNNING'
-            return Promise.reject "Can't send commands while target is running"
+            return Promise.reject new Error("Can't send commands while target is running")
         new Promise (resolve, reject) =>
             cmd = @next_token + cmd
             @next_token += 1
@@ -118,7 +118,7 @@ class GDB
 
     _flush_queue: ->
         for c in @cmdq
-            c.reject 'Flushed due to previous errors'
+            c.reject new Error('Flushed due to previous errors')
         @cmdq = []
 
     send_cli: (cmd) ->
