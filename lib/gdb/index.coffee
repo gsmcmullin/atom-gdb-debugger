@@ -123,5 +123,12 @@ class GDB
 
     send_cli: (cmd) ->
         @send_mi "-interpreter-exec console #{cstr(cmd)}"
+        .then =>
+            if @exec.state != 'RUNNING' then return
+            new Promise (resolve, reject) =>
+                x = @exec.onStateChanged ([state]) ->
+                    if state == 'RUNNING' then return
+                    x.dispose()
+                    resolve()
 
 module.exports = GDB

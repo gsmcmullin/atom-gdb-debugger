@@ -45,6 +45,8 @@ class GdbCliView extends View
             @_text_output "(gdb) "
             @_text_output cmd + '\n', 'text-highlight'
             @gdb.send_cli cmd
+                .then =>
+                    @_focusInput()
                 .catch ->
 
     _text_output: (text, cls) ->
