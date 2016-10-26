@@ -122,6 +122,9 @@ class GDB
         @cmdq = []
 
     send_cli: (cmd) ->
+        cmd = cmd.trim()
+        if cmd.startsWith '#'
+            return Promise.resolve()
         @send_mi "-interpreter-exec console #{cstr(cmd)}"
         .then =>
             if @exec.state != 'RUNNING' then return
