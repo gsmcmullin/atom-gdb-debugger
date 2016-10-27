@@ -29,16 +29,15 @@ class GDB
         @emitter.on 'async-status', cb
 
     connect: ->
-        if @child?
-            @exec._disconnected()
-            @child.kill()
         {cmdline, cwd, file, init} = @config
-        # Spawn the GDB child process and connect up event handlers
-        bufferedProcess
-                command: cmdline
-                args: ['-n', '--interpreter=mi']
-                stdout: @_line_output_handler.bind(this)
-                exit: @_child_exited.bind(this)
+        (@child?.kill() or Promise.resolve())
+            .then =>
+                # Spawn the GDB child process and connect up event handlers
+                bufferedProcess
+                    command: cmdline
+                    args: ['-n', '--interpreter=mi']
+                    stdout: @_line_output_handler.bind(this)
+                    exit: @_child_exited.bind(this)
             .then (@child) =>
                 @send_mi "-gdb-set confirm off"
             .then =>
@@ -51,7 +50,7 @@ class GDB
                 Promise.all(@send_cli cmd for cmd in init.split '\n')
             .catch (err) =>
                 @exec._disconnected()
-                @child.kill()
+                @child?.kill()
                 delete @child
                 throw err
 
@@ -84,10 +83,10 @@ class GDB
     _result_record_handler: (cls, results) ->
         c = @cmdq.shift()
         if cls == 'error'
-            c.reject results.msg
+            c?.reject results.msg
             @_flush_queue()
             return
-        c.resolve results
+        c?.resolve results
         @_drain_queue()
 
     _child_exited: () ->

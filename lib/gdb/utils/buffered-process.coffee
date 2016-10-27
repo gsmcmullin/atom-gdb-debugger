@@ -20,6 +20,8 @@ class BufferedProcess
             @process.once 'error', error
 
             @process.on 'exit', => @exit()
+            @exitPromise = new Promise (resolve) =>
+                @process.on 'exit', -> resolve()
 
     stdin: (line) ->
         @process.stdin.write line + '\n'
@@ -35,6 +37,7 @@ class BufferedProcess
 
     kill: (signal) ->
         @process.kill signal
+        @exitPromise
 
 module.exports = (options) ->
     new BufferedProcess(options)._spawn()
