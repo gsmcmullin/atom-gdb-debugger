@@ -1,12 +1,37 @@
 {View, $} = require 'atom-space-pen-views'
 
 class VarItemView extends View
-    initialize: (@gdb, item) ->
-        @name = item.name
-        if +item.numchild != 0
+    initialize: (@gdb, @item) ->
+        @item.onChanged => @_updated()
+        @item.onDeleted => @_deleted()
+        @_updated()
+
+    _updated: ->
+        if +@item.numchild != 0
             @find('input#value').attr('disabled', true)
-        if item.watchpoint?
+            @addClass('collapsable')
+        if @item.watchpoint?
             @find('input#wp-toggle').prop('checked', true)
+
+        v = @find('input#value')
+        if v.val() != @item.value
+            v.val @item.value
+            v.addClass 'changed'
+
+        wp = @find('input#wp-toggle')
+        wp.prop 'checked', @item.watchpoint?
+        badge = @find('.badge')
+        if @item.watchpoint?
+            badge.show()
+            if @item.watchpoint.times != badge.text()
+                badge.addClass 'badge-info'
+            badge.text @item.watchpoint.times
+        else
+            badge.text '0'
+            badge.hide()
+
+    _deleted: ->
+        @remove()
 
     @content: (gdb, item) ->
         @tr name: item.name, parent: item.parent, =>
@@ -50,16 +75,16 @@ class VarItemView extends View
                 @_showTree $child.attr 'name'
 
     _remove: ->
-        @gdb.varobj.remove @name
+        @item.remove()
 
     _toggleWP: (ev) ->
         if ev.target.checked
-            @gdb.varobj.setWatch @name
+            @item.setWatch()
                 .catch (err) =>
                     atom.notifications.addError err.toString()
                     ev.target.checked = false
         else
-            @gdb.varobj.clearWatch @name
+            @item.clearWatch()
                 .catch (err) =>
                     atom.notifications.addError err.toString()
                     ev.target.checked = true
@@ -68,9 +93,9 @@ class VarItemView extends View
         if @hasClass 'collapsable'
             @toggleClass 'collapsed'
             if @hasClass 'collapsed'
-                @_hideTree @name
+                @_hideTree @item.name
             else
-                @_showTree @name
+                @_showTree @item.name
 
     _valueFocus: (ev) ->
         ev.target.oldValue = ev.target.value
@@ -80,7 +105,7 @@ class VarItemView extends View
     _valueKeydown: (ev) ->
         switch ev.keyCode
             when 13 # Enter
-                @gdb.varobj.assign @name, ev.target.value
+                @item.assign ev.target.value
                     .then (val) ->
                         ev.target.oldValue = ev.target.value = val
                         ev.target.blur()
@@ -94,7 +119,7 @@ module.exports =
 class VarWatchView extends View
     initialize: (@gdb) ->
         @varviews = {}
-        @gdb.vars.observe @_varObserver.bind(this)
+        @gdb.vars.observe @_addItem.bind(this)
         @gdb.exec.onStateChanged @_execStateChanged.bind(this)
 
     @content: (gdb) ->
@@ -119,7 +144,7 @@ class VarWatchView extends View
 
     _addExpr: (ev) ->
         if ev.charCode != 13 then return
-        @gdb.varobj.add @expr.val()
+        @gdb.vars.add @expr.val()
             .then =>
                 @error.text ''
             .catch (err) =>
@@ -133,42 +158,14 @@ class VarWatchView extends View
             return @_findLast nextName
         return name
 
-    _addItem: (id, val) ->
-        view = @varviews[id] = new VarItemView(@gdb, val)
+    _addItem: (val) ->
+        view = new VarItemView(@gdb, val)
         if not val.parent?
             @table.append view
         else
             lastName = @_findLast val.parent
-            view.insertAfter @varviews[lastName]
+            view.insertAfter @find("tr[name='#{lastName}']")
         view
-
-    _varObserver: (id, val) ->
-        view = @varviews[id]
-        if not val?
-            view.remove()
-            delete @varviews[id]
-            return
-        if not view?
-            view = @_addItem id, val
-        v = view.find('input#value')
-        if v.val() != val.value
-            v.val val.value
-            v.addClass 'changed'
-            while id = @gdb.varobj.vars[id].parent
-                @varviews[id].find('input#value').addClass 'changed'
-        wp = view.find('input#wp-toggle')
-        wp.prop 'checked', val.watchpoint?
-        badge = view.find('.badge')
-        if val.times?
-            badge.show()
-            if val.times != badge.text()
-                badge.addClass 'badge-info'
-            badge.text val.times
-        else
-            badge.text '0'
-            badge.hide()
-        if +val.numchild > 0
-            view.addClass('collapsable')
 
     _execStateChanged: ([state, frame]) ->
         if state == 'RUNNING'

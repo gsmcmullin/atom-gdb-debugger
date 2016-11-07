@@ -65,7 +65,7 @@ class ThreadStackView extends View
             frame = li.attr 'frame-id'
             li = li.parent().closest('li')
             thread = li.attr 'thread-id'
-            @gdb.varobj.add exp, frame, thread
+            @gdb.vars.add exp, frame, thread
         view
 
     update: ->
