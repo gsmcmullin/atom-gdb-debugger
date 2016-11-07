@@ -45,9 +45,16 @@ class GdbCliView extends View
             @_text_output "(gdb) "
             @_text_output cmd + '\n', 'text-highlight'
             @gdb.send_cli cmd
-                .then =>
-                    @_focusInput()
-                .catch ->
+            .then =>
+                if @gdb.exec.state != 'RUNNING' then return
+                new Promise (resolve, reject) =>
+                    x = @gdb.exec.onStateChanged ([state]) ->
+                        if state == 'RUNNING' then return
+                        x.dispose()
+                        resolve()
+            .then =>
+                @_focusInput()
+            .catch ->
 
     _text_output: (text, cls) ->
         text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
