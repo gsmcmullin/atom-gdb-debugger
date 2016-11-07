@@ -1,6 +1,6 @@
 GdbMiView = require './gdb-mi-view'
 {CompositeDisposable} = require 'atom'
-GDB = require './gdb'
+GDB = require 'node-gdb'
 DebugPanelView = require './debug-panel-view'
 ConfigView = require './config-view'
 Resizable = require './resizable'
@@ -19,9 +19,8 @@ module.exports = AtomGdbDebugger =
     activate: (state) ->
         @gdb = new GDB(state)
         window.gdb = @gdb
-        for k, v of state.gdbConfig
-            @gdb.config[k] = v
-        @gdb.config.cwd = atom.project.getPaths()[0]
+        @gdbConfig = state.gdbConfig
+        @gdbConfig.cwd = atom.project.getPaths()[0]
         @panelVisible = state.panelVisible
         @panelVisible ?= true
         @cliVisible = state.cliVisible
@@ -57,22 +56,30 @@ module.exports = AtomGdbDebugger =
                 atom.notifications.addError err.toString()
 
     connect: ->
-        if @gdb.config.file == ''
+        if @gdbConfig.file == ''
             new ConfigView(@gdb)
         else
-            @gdb.connect()
-                .then =>
-                    if @panelVisible then @panel.show()
-                    if @cliVisible then @cliPanel.show()
-                .catch (err) =>
-                    x = atom.notifications.addError 'Error launching GDB',
-                        description: err.toString()
-                        buttons: [
-                            text: 'Reconfigure'
-                            onDidClick: =>
-                                x.dismiss()
-                                new ConfigView(@gdb)
-                        ]
+            @gdb.connect(@gdbConfig.cmdline)
+            .then =>
+                @gdb.set 'confirm', 'off'
+            .then =>
+                @gdb.setCwd @gdbConfig.cwd
+            .then =>
+                @gdb.setFile @gdbConfig.file
+            .then =>
+                Promise.all(@gdb.send_cli cmd for cmd in @gdbConfig.init.split '\n')
+            .then =>
+                if @panelVisible then @panel.show()
+                if @cliVisible then @cliPanel.show()
+            .catch (err) =>
+                x = atom.notifications.addError 'Error launching GDB',
+                    description: err.toString()
+                    buttons: [
+                        text: 'Reconfigure'
+                        onDidClick: =>
+                            x.dismiss()
+                            new ConfigView(@gdb)
+                    ]
 
     consumeStatusBar: (statusBar) ->
         StatusView = require './status-view'
@@ -81,7 +88,7 @@ module.exports = AtomGdbDebugger =
             priority: 100
 
     serialize: ->
-          gdbConfig: @gdb.config
+          gdbConfig: @gdbConfig
           panelVisible: @panelVisible
           cliVisible: @cliVisible
           panelSize: @panel.getItem().size()

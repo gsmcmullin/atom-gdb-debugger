@@ -94,7 +94,7 @@ module.exports =
 class VarWatchView extends View
     initialize: (@gdb) ->
         @varviews = {}
-        @gdb.varobj.observe @_varObserver.bind(this)
+        @gdb.vars.observe @_varObserver.bind(this)
         @gdb.exec.onStateChanged @_execStateChanged.bind(this)
 
     @content: (gdb) ->
