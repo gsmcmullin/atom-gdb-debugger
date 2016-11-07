@@ -39,7 +39,7 @@ class GdbCliView extends View
             cmd = @cmd.val()
             @cmd.val ''
             if cmd == ''
-                cmd = @history.slice(-1)
+                cmd = @history.slice(-1)[0]
             else
                 @history.push cmd
             @_text_output "(gdb) "
