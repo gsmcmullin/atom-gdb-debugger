@@ -71,16 +71,16 @@ class ThreadStackView extends View
     update: ->
         @empty()
         @gdb.exec.getThreads()
-            .then (results) =>
-                @selectedThread = results['current-thread-id']
-                @append @renderThreads results.threads, results['current-thread-id']
+            .then (threads) =>
+                @selectedThread ?= threads[0].id
+                @append @renderThreads threads, @selectedThread
                 @gdb.exec.getFrames @selectedThread
             .then (frames) =>
                 @selectedFrame = 0
                 @find("li[thread-id=#{@selectedThread}]")
                     .removeClass 'collapsed'
                     .append @renderFrames frames, @selectedFrame
-                @gdb.exec.getLocals @selectedThread, @selectedFrame
+                @gdb.exec.getLocals @selectedFrame, @selectedThread
             .then (locals) =>
                 @find("li[thread-id=#{@selectedThread}] li[frame-id=#{@selectedFrame}]")
                     .removeClass 'collapsed'
