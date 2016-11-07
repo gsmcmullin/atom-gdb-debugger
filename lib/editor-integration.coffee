@@ -84,7 +84,7 @@ class EditorIntegration
                 if not cident? or cident == '' then return
             catch
                 return
-            @gdb.varobj.evalExpression cident
+            @gdb.vars.evalExpression cident
                 .then (val) ->
                     atom.notifications.addInfo "`#{cident} = #{val}`"
                 .catch () ->
