@@ -10,6 +10,8 @@ class VarItemView extends View
         if +@item.numchild != 0
             @find('input#value').attr('disabled', true)
             @addClass('collapsable')
+            if not @item.children?
+                @addClass('collapsed')
         if @item.watchpoint?
             @find('input#wp-toggle').prop('checked', true)
 
@@ -34,7 +36,7 @@ class VarItemView extends View
         @remove()
 
     @content: (gdb, item) ->
-        @tr name: item.name, parent: item.parent, =>
+        @tr name: item.name, parent: item.parent?.name, =>
             @td class: 'expand-column', click: 'toggleCollapse', =>
                 @span item.exp,
                     style: "margin-left: #{item.nest}em"
@@ -95,6 +97,8 @@ class VarItemView extends View
             if @hasClass 'collapsed'
                 @_hideTree @item.name
             else
+                if not @item.children?
+                    @item.addChildren()
                 @_showTree @item.name
 
     _valueFocus: (ev) ->
@@ -163,8 +167,9 @@ class VarWatchView extends View
         if not val.parent?
             @table.append view
         else
-            lastName = @_findLast val.parent
-            view.insertAfter @find("tr[name='#{lastName}']")
+            lastName = @_findLast val.parent.name
+            last = @find("tr[name='#{lastName}']")
+            view.insertAfter last
         view
 
     _execStateChanged: ([state, frame]) ->
