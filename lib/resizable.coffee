@@ -3,7 +3,7 @@
 module.exports =
 class Resizable extends View
     initialize: (@side, size, child) ->
-        if side == 'left' or side == 'right'
+        if @side == 'left' or @side == 'right'
             @size = @width
             @evkey = 'pageX'
         else
