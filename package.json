@@ -17,7 +17,7 @@
   "repository": "https://github.com/gsmcmullin/atom-gdb-debugger",
   "license": "GPL-3.0+",
   "engines": {
-    "atom": ">=1.0.0 <2.0.0"
+    "atom": ">=1.12.0 <2.0.0"
   },
   "consumedServices": {
     "status-bar": {

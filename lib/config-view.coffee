@@ -1,7 +1,7 @@
 {View, $$} = require 'atom-space-pen-views'
 {Directory, File} = require 'atom'
 remote = require 'remote'
-dialog = remote.require 'dialog'
+{dialog} = require('electron').remote
 
 findGDB = ->
     Promise.all (for dirName in process.env.PATH.split(':')
