@@ -29,7 +29,7 @@
   "dependencies": {
     "atom-space-pen-views": "~2.2.0",
     "event-kit": "^2.2.0",
-    "node-gdb": "0.0.4",
+    "node-gdb": "0.0.5",
     "underscore": "^1.8.3"
   },
   "devDependencies": {
