@@ -4,14 +4,15 @@ remote = require 'remote'
 {dialog} = require('electron').remote
 
 findGDB = ->
-    Promise.all (for dirName in process.env.PATH.split(':')
+    pathsep = if process.platform == 'win32' then ';' else ':'
+    Promise.all (for dirName in process.env.PATH.split(pathsep)
         new Promise (resolve, reject) ->
             new Directory(dirName).getEntries (err, entries) =>
                 if err?
                     resolve []
                     return
                 resolve(for file in entries
-                    if file.getBaseName().search(/^(.*-)?gdb(-.*)?$/) >= 0
+                    if file.getBaseName().search(/^(.*-)?gdb(-.*)?(\..*)?$/) >= 0
                         file.getBaseName()
                 )
         )
