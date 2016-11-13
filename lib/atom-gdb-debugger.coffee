@@ -19,7 +19,7 @@ module.exports = AtomGdbDebugger =
     activate: (state) ->
         @gdb = new GDB(state)
         window.gdb = @gdb
-        @gdbConfig = state.gdbConfig
+        @gdbConfig = state.gdbConfig or {}
         @gdbConfig.cwd = atom.project.getPaths()[0]
         @panelVisible = state.panelVisible
         @panelVisible ?= true
@@ -37,7 +37,7 @@ module.exports = AtomGdbDebugger =
         @subscriptions = new CompositeDisposable
 
         @subscriptions.add atom.commands.add 'atom-workspace',
-            'atom-gdb-debugger:configure': => new ConfigView(@gdb)
+            'atom-gdb-debugger:configure': => new ConfigView(@gdbConfig)
             'atom-gdb-debugger:connect': => @connect()
             'atom-gdb-debugger:continue': => @cmdWrap => @gdb.exec.continue()
             'atom-gdb-debugger:step': => @cmdWrap => @gdb.exec.step()
@@ -56,8 +56,8 @@ module.exports = AtomGdbDebugger =
                 atom.notifications.addError err.toString()
 
     connect: ->
-        if @gdbConfig.file == ''
-            new ConfigView(@gdb)
+        if not @gdbConfig.file? or @gdbConfig.file == ''
+            new ConfigView(@gdbConfig)
         else
             @gdb.connect(@gdbConfig.cmdline)
             .then =>
@@ -78,7 +78,7 @@ module.exports = AtomGdbDebugger =
                         text: 'Reconfigure'
                         onDidClick: =>
                             x.dismiss()
-                            new ConfigView(@gdb)
+                            new ConfigView(@gdbConfig)
                     ]
 
     consumeStatusBar: (statusBar) ->

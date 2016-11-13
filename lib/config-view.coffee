@@ -24,16 +24,13 @@ findGDB = ->
 
 module.exports =
 class ConfigView extends View
-    initialize: (gdb) ->
-        @gdb = gdb
+    initialize: (@config) ->
         @panel = atom.workspace.addModalPanel(item: this)
         @panel.show()
 
-        cf = @gdb.config
-        @_setFile cf.file
-        @init.val cf.init
-        @dummy.text cf.cmdline
-        @isRemote.prop 'checked', cf.isRemote
+        @_setFile @config.file
+        @init.val @config.init
+        @dummy.text @config.cmdline
 
         @cmdline.on 'change', => @_validate()
 
@@ -46,7 +43,7 @@ class ConfigView extends View
             @cmdline.empty()
             for gdb in gdbs
                 @cmdline.append $$ -> @option gdb, value: gdb
-            @cmdline[0].value = cf.cmdline
+            @cmdline[0].value = @config.cmdline
             @_validate()
 
     @content: (gdb) ->
@@ -67,10 +64,6 @@ class ConfigView extends View
                         disabled: true
                         outlet: 'fileDisplay'
             @div class: 'block', =>
-                @label class: 'input-label', =>
-                    @input class: 'input-checkbox', type: 'checkbox', outlet: 'isRemote'
-                    @text 'Target is remote'
-            @div class: 'block', =>
                 @div "GDB init commands:"
                 @textarea class: 'input-textarea native-key-bindings', outlet: 'init'
 
@@ -86,11 +79,9 @@ class ConfigView extends View
         @panel.destroy()
 
     do_ok: ->
-        cf = @gdb.config
-        cf.cmdline = @cmdline.val()
-        cf.file = @file
-        cf.init = @init.val()
-        cf.isRemote = @isRemote.prop 'checked'
+        @config.cmdline = @cmdline.val()
+        @config.file = @file
+        @config.init = @init.val()
         @panel.destroy()
         atom.commands.dispatch atom.views.getView(atom.workspace), 'atom-gdb-debugger:connect'
 
@@ -113,7 +104,7 @@ class ConfigView extends View
     _selectBinary: ->
         dialog.showOpenDialog {
             title: 'Select target binary'
-            defaultPath: @gdb.config.cwd
+            defaultPath: @config.cwd
             properties :['openFile']
         }, (file) =>
             if not file? then return
