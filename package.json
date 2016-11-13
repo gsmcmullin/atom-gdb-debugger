@@ -31,11 +31,5 @@
     "event-kit": "^2.2.0",
     "node-gdb": "0.0.5",
     "underscore": "^1.8.3"
-  },
-  "devDependencies": {
-    "jison": "~0.4.17"
-  },
-  "scripts": {
-    "prepublish": "jison ./lib/gdb/gdbmi.jison -o ./lib/gdb/gdbmi.js"
   }
 }
