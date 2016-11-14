@@ -13,13 +13,15 @@ class GdbToolbarView extends View
         @gdb = gdb
         @gdb.exec.onStateChanged @_onStateChanged.bind(this)
         for button in @find('button')
-            this[button.getAttribute 'command'] = $(button)
+            cmd = button.getAttribute 'command'
+            this[cmd] = $(button)
+            if cmd == 'connect' then continue
             button.addEventListener 'click', @do
 
     @content: ->
         @div class: 'btn-toolbar', =>
             @div class: 'btn-group', =>
-                @button class: 'btn icon icon-plug', command: 'connect'
+                @button class: 'btn icon icon-plug', command: 'connect', click: 'toggleConnect'
                 @button class: 'btn icon icon-tools', command: 'configure'
             @div class: 'btn-group', =>
                 @button class: 'btn icon icon-playback-play', command: 'continue'
@@ -32,6 +34,12 @@ class GdbToolbarView extends View
     do: (ev) ->
         command = ev.target.getAttribute 'command'
         atom.commands.dispatch atom.views.getView(atom.workspace), "atom-gdb-debugger:#{command}"
+
+    toggleConnect: ->
+        if @connect.hasClass 'selected'
+            atom.commands.dispatch atom.views.getView(atom.workspace), "atom-gdb-debugger:disconnect"
+        else
+            atom.commands.dispatch atom.views.getView(atom.workspace), "atom-gdb-debugger:connect"
 
     _onStateChanged: ([state, frame]) ->
         if state == 'DISCONNECTED'

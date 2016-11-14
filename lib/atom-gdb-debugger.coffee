@@ -39,6 +39,7 @@ module.exports = AtomGdbDebugger =
         @subscriptions.add atom.commands.add 'atom-workspace',
             'atom-gdb-debugger:configure': => new ConfigView(@gdbConfig)
             'atom-gdb-debugger:connect': => @connect()
+            'atom-gdb-debugger:disconnect': => @cmdWrap => @gdb.disconnect()
             'atom-gdb-debugger:continue': => @cmdWrap => @gdb.exec.continue()
             'atom-gdb-debugger:step': => @cmdWrap => @gdb.exec.step()
             'atom-gdb-debugger:next': => @cmdWrap => @gdb.exec.next()
