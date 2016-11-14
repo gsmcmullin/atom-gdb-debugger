@@ -21,7 +21,7 @@ stop by the Gitter channel and let us know what you think.
 * Assign new values to target variables
 
 ## Default key bindings (with GDB/CLI equivalents)
-* `Ctrl-Alt-O` Starts GDB
+* `F12` Activate package and start GDB
 * `F5` Resume target execution (`continue`)
 * `Shift-F5` Interrupt target execution (`Ctrl-C`/`interrupt`)
 * `F9` Toggle breakpoint on current line in editor (`break`/`delete`)
