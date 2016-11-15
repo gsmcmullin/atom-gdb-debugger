@@ -47,7 +47,7 @@ class ThreadStackView extends View
             if not li.hasClass('collapsed') and li.find('ul').length == 0
                 thread = li.parent().closest('li').attr 'thread-id'
                 frame = li.attr 'frame-id'
-                @gdb.exec.getLocals thread, frame
+                @gdb.exec.getLocals frame, thread
                     .then (locals) =>
                         li.append @renderLocals locals
         view
