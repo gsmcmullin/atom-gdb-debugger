@@ -24,6 +24,10 @@ class ThreadStackView extends View
             view.find("li[thread-id=#{selected}]").addClass 'selected'
         view.find("li>div").on 'click', (ev) =>
             li = $(ev.currentTarget).parent()
+            if not li.hasClass 'selected'
+                @find('li.selected').removeClass 'selected'
+                li.addClass 'selected'
+                li.find('li[frame-id="0"]').addClass 'selected'
             li.toggleClass 'collapsed'
             if not li.hasClass('collapsed') and li.find('ul').length == 0
                 thread = li.attr 'thread-id'
@@ -44,9 +48,14 @@ class ThreadStackView extends View
         view.find("li>div").on 'click', (ev) =>
             li = $(ev.currentTarget).parent()
             li.toggleClass 'collapsed'
+            thread = li.parent().closest('li').attr 'thread-id'
+            frame = li.attr 'frame-id'
+            if not li.hasClass 'selected'
+                @find('li.selected').removeClass 'selected'
+                li.addClass 'selected'
+                li.parent().closest('li').addClass 'selected'
+                @gdb.exec.selectFrame frame, thread
             if not li.hasClass('collapsed') and li.find('ul').length == 0
-                thread = li.parent().closest('li').attr 'thread-id'
-                frame = li.attr 'frame-id'
                 @gdb.exec.getLocals frame, thread
                     .then (locals) =>
                         li.append @renderLocals locals
@@ -85,9 +94,3 @@ class ThreadStackView extends View
                 @find("li[thread-id=#{@selectedThread}] li[frame-id=#{@selectedFrame}]")
                     .removeClass 'collapsed'
                     .append @renderLocals locals
-
-    frameClicked: (ev) ->
-        level = ev.currentTarget.getAttribute 'data-id'
-        @gdb.exec.selectFrame level
-            .then =>
-                @level = level

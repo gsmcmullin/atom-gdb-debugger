@@ -29,7 +29,7 @@ class EditorIntegration
 
         @subscriptions = new CompositeDisposable
 
-        @subscriptions.add @gdb.exec.onStateChanged @_execStateChanged
+        @subscriptions.add @gdb.exec.onFrameChanged @_frameChanged
         @subscriptions.add @gdb.breaks.observe @_breakpointCreated
 
         @subscriptions.add atom.commands.add 'atom-text-editor',
@@ -43,10 +43,10 @@ class EditorIntegration
         file = editor.getBuffer().getPath()
         @gdb.breaks.toggle(file, row+1)
 
-    _execStateChanged: ([state, frame]) =>
+    _frameChanged: (frame) =>
         if @mark? then @mark.destroy()
         @mark = null
-        if state != 'STOPPED' or not frame? then return
+        if not frame? then return
         if not frame.fullname?
             atom.notifications.addWarning "Debug info not available",
                 description: "This may be because the function is part of an
