@@ -1,4 +1,5 @@
 {View, $} = require 'atom-space-pen-views'
+{escapeHTML} = require './utils'
 
 module.exports =
 class GdbCliView extends View
@@ -57,7 +58,7 @@ class GdbCliView extends View
             .catch ->
 
     _text_output: (text, cls) ->
-        text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        text = escapeHTML(text)
         if cls?
             text = "<span class='#{cls}'>#{text}</span>"
         @console.append text

@@ -14,3 +14,6 @@ module.exports =
             ret = match[0]
             pos--
         ret
+
+    escapeHTML: (text) ->
+        text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")

@@ -1,5 +1,5 @@
 {View} = require 'atom-space-pen-views'
-
+{escapeHTML} = require './utils'
 module.exports =
 class GdbMiView extends View
     initialize: (gdb) ->
@@ -13,8 +13,9 @@ class GdbMiView extends View
                 @pre outlet: 'console'
 
     _text_output: (text) ->
-        text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        text = escapeHTML(text)
         @console.append(text + '\n')
-        @scrolled_window.prop 'scrollTop', @console.height() - @scrolled_window.height()
+        @scrolled_window.prop 'scrollTop',
+                              @console.height() - @scrolled_window.height()
 
     getTitle: -> 'GDB/MI'
