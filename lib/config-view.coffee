@@ -7,7 +7,7 @@ findGDB = ->
     pathsep = if process.platform == 'win32' then ';' else ':'
     Promise.all (for dirName in process.env.PATH.split(pathsep)
         new Promise (resolve, reject) ->
-            new Directory(dirName).getEntries (err, entries) =>
+            new Directory(dirName).getEntries (err, entries) ->
                 if err?
                     resolve []
                     return

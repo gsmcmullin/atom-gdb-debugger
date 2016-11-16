@@ -33,7 +33,7 @@ class BreakListView extends View
         @gdb.exec.onStateChanged @_execStateChanged.bind(this)
 
     @content: ->
-        @table id: 'break-list', class: 'list-tree', =>
+        @table id: 'break-list', class: 'list-tree', ->
 
     breakpointObserver: (id, bkpt) ->
         # Don't show watchpoints in here

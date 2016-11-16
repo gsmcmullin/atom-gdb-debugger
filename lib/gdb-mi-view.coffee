@@ -13,7 +13,7 @@ class GdbMiView extends View
                 @pre outlet: 'console'
 
     _text_output: (text) ->
-        text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         @console.append(text + '\n')
         @scrolled_window.prop 'scrollTop', @console.height() - @scrolled_window.height()
 

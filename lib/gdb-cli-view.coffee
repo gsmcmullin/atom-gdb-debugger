@@ -57,7 +57,7 @@ class GdbCliView extends View
             .catch ->
 
     _text_output: (text, cls) ->
-        text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         if cls?
             text = "<span class='#{cls}'>#{text}</span>"
         @console.append text

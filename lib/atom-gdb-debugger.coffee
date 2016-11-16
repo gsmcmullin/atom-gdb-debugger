@@ -53,7 +53,7 @@ module.exports = AtomGdbDebugger =
 
     cmdWrap: (cmd) ->
         cmd()
-            .catch (err) =>
+            .catch (err) ->
                 atom.notifications.addError err.toString()
 
     connect: ->
@@ -89,11 +89,11 @@ module.exports = AtomGdbDebugger =
             priority: 100
 
     serialize: ->
-          gdbConfig: @gdbConfig
-          panelVisible: @panelVisible
-          cliVisible: @cliVisible
-          panelSize: @panel.getItem().size()
-          cliSize: @cliPanel.getItem().size()
+        gdbConfig: @gdbConfig
+        panelVisible: @panelVisible
+        cliVisible: @cliVisible
+        panelSize: @panel.getItem().size()
+        cliSize: @cliPanel.getItem().size()
 
     deactivate: ->
         @statusBarTile?.destroy()

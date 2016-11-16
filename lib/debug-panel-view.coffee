@@ -8,7 +8,7 @@ class SubPanel extends View
     @content: (header, child)->
         @div class: 'debug-subpanel', =>
             @div header, class: 'header', click: 'toggleChild', outlet: 'header'
-            @subview 'child', => child
+            @subview 'child', -> child
 
     toggleChild: ->
         if @child().css('display') == 'none'
