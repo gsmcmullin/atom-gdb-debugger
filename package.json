@@ -6,7 +6,10 @@
   "keywords": [
     "gdb",
     "debug",
-    "debugger"
+    "debugger",
+    "c",
+    "c++",
+    "embedded"
   ],
   "activationCommands": {
     "atom-workspace": [
