@@ -7,6 +7,17 @@ posFromMouse = (editor, ev) ->
         editor.editorElement.component.screenPositionForMouseEvent ev
     editor.bufferPositionForScreenPosition screenPosition
 
+cidentFromMouse = (ev) ->
+    try
+        ed = ev.target.model
+        {row, column} = posFromMouse ed, ev
+        buffer = ed.getBuffer()
+        line = buffer.lineForRow row
+        cident = cidentFromLine line, column
+    catch
+        return
+    return cident
+
 decorate = (file, line, decoration) ->
     line = +line-1
     new Promise (resolve, reject) ->
@@ -35,6 +46,7 @@ class EditorIntegration
 
         @subscriptions.add atom.commands.add 'atom-text-editor',
             'atom-gdb-debugger:toggle-breakpoint': @_toggleBreakpoint
+            'atom-gdb-debugger:context-watch-expression': @_ctxWatchExpr
 
         @subscriptions.add atom.workspace.observeTextEditors @_hookEditor
 
@@ -43,7 +55,18 @@ class EditorIntegration
                 label: "Toggle Breakpoint"
                 command: "atom-gdb-debugger:toggle-breakpoint"
                 created: (ev) => @ctxEvent = ev
+            }, {
+                command: "atom-gdb-debugger:context-watch-expression"
+                shouldDisplay: (ev) =>
+                    @ctxEvent = ev
+                    cident = cidentFromMouse ev
+                    return cident? and cident != ''
+                created: (ev) ->
+                    @label = "Watch '#{cidentFromMouse ev}'"
             }]
+
+    _ctxWatchExpr: (ev) =>
+        @gdb.vars.add(cidentFromMouse(@ctxEvent))
 
     _toggleBreakpoint: (ev) =>
         editor = ev.target.component.editor
@@ -88,10 +111,7 @@ class EditorIntegration
         el = ed.editorElement
         hover = (ev) =>
             try
-                {row, column} = posFromMouse ed, ev
-                buffer = ed.getBuffer()
-                line = buffer.lineForRow row
-                cident = cidentFromLine line, column
+                cident = cidentFromMouse ev
                 if not cident? or cident == '' then return
             catch
                 return
