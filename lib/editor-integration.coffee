@@ -67,6 +67,8 @@ class EditorIntegration
 
     _ctxWatchExpr: (ev) =>
         @gdb.vars.add(cidentFromMouse(@ctxEvent))
+        .catch (err) ->
+            atom.notifications.addError(err.toString())
 
     _toggleBreakpoint: (ev) =>
         editor = ev.target.component.editor
