@@ -7,6 +7,13 @@ class VarItemView extends View
         @_updated()
 
     _updated: ->
+        switch @item.in_scope
+            when 'false'
+                @addClass 'out-of-scope'
+                @item.value = ''
+            when 'invalid' then @_remove()
+            else @removeClass 'out-of-scope'
+
         if +@item.numchild != 0
             @find('input#value').attr('disabled', true)
             @addClass('collapsable')
@@ -82,12 +89,12 @@ class VarItemView extends View
     _toggleWP: (ev) ->
         if ev.target.checked
             @item.setWatch()
-                .catch (err) =>
+                .catch (err) ->
                     atom.notifications.addError err.toString()
                     ev.target.checked = false
         else
             @item.clearWatch()
-                .catch (err) =>
+                .catch (err) ->
                     atom.notifications.addError err.toString()
                     ev.target.checked = true
 
