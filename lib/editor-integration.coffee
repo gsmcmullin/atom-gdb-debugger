@@ -3,24 +3,25 @@ fs = require 'fs'
 {cidentFromLine} = require './utils'
 
 posFromMouse = (editor, ev) ->
-    screenPosition = editor.editorElement.component.screenPositionForMouseEvent ev
+    screenPosition =
+        editor.editorElement.component.screenPositionForMouseEvent ev
     editor.bufferPositionForScreenPosition screenPosition
 
 decorate = (file, line, decoration) ->
     line = +line-1
     new Promise (resolve, reject) ->
-            fs.access file, fs.R_OK, (err) ->
-                if err then reject(err) else resolve()
-        .then () ->
-            atom.workspace.open file,
-                activatePane: false
-                initialLine: line
-                searchAllPanes: true
-                pending: true
-        .then (editor) ->
-            mark = editor.markBufferPosition([line, 1])
-            editor.decorateMarker mark, decoration
-            mark
+        fs.access file, fs.R_OK, (err) ->
+            if err then reject(err) else resolve()
+    .then () ->
+        atom.workspace.open file,
+            activatePane: false
+            initialLine: line
+            searchAllPanes: true
+            pending: true
+    .then (editor) ->
+        mark = editor.markBufferPosition([line, 1])
+        editor.decorateMarker mark, decoration
+        mark
 
 module.exports =
 class EditorIntegration
@@ -37,9 +38,19 @@ class EditorIntegration
 
         @subscriptions.add atom.workspace.observeTextEditors @_hookEditor
 
+        @subscriptions.add atom.contextMenu.add
+            'atom-text-editor': [{
+                label: "Toggle Breakpoint"
+                command: "atom-gdb-debugger:toggle-breakpoint"
+                created: (ev) => @ctxEvent = ev
+            }]
+
     _toggleBreakpoint: (ev) =>
         editor = ev.target.component.editor
-        {row} = editor.getCursorBufferPosition()
+        if ev.detail?[0].contextCommand
+            {row} = posFromMouse(ev.target.model, @ctxEvent)
+        else
+            {row} = editor.getCursorBufferPosition()
         file = editor.getBuffer().getPath()
         @gdb.breaks.toggle(file, row+1)
 
@@ -61,15 +72,15 @@ class EditorIntegration
                     current frame.  This may be because the function is part
                     of a external included library."
 
-    _breakpointCreated: (id, bkpt) =>
+    _breakpointCreated: (id, bkpt) ->
         {fullname, line} = bkpt
         if not fullname? then return
         decorate fullname, line,
                 type: 'line-number', class: 'gdb-bkpt'
-            .then (mark) =>
-                bkpt.onChanged =>
+            .then (mark) ->
+                bkpt.onChanged ->
                     mark.setBufferRange [[line-1, 0], [line-1, 0]]
-                bkpt.onDeleted =>
+                bkpt.onDeleted ->
                     mark.destroy()
 
     _hookEditor: (ed) =>
