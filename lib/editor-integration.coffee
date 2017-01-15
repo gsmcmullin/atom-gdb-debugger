@@ -71,9 +71,9 @@ class EditorIntegration
             atom.notifications.addError(err.toString())
 
     _toggleBreakpoint: (ev) =>
-        editor = ev.target.component.editor
+        editor = ev.currentTarget.component.editor
         if ev.detail?[0].contextCommand
-            {row} = posFromMouse(ev.target.model, @ctxEvent)
+            {row} = posFromMouse(ev.currentTarget.model, @ctxEvent)
         else
             {row} = editor.getCursorBufferPosition()
         file = editor.getBuffer().getPath()
