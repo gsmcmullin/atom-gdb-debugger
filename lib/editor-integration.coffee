@@ -1,15 +1,16 @@
 {CompositeDisposable} = require 'atom'
 fs = require 'fs'
 {cidentFromLine} = require './utils'
+{$} = require 'atom-space-pen-views'
 
 posFromMouse = (editor, ev) ->
     screenPosition =
-        editor.editorElement.component.screenPositionForMouseEvent ev
+        editor.element.component.screenPositionForMouseEvent ev
     editor.bufferPositionForScreenPosition screenPosition
 
 cidentFromMouse = (ev) ->
     try
-        ed = ev.target.model
+        ed = $(ev.target).closest('atom-text-editor')[0].getModel()
         {row, column} = posFromMouse ed, ev
         buffer = ed.getBuffer()
         line = buffer.lineForRow row
@@ -71,12 +72,12 @@ class EditorIntegration
             atom.notifications.addError(err.toString())
 
     _toggleBreakpoint: (ev) =>
-        editor = ev.currentTarget.component.editor
+        ed = ev.currentTarget.getModel()
         if ev.detail?[0].contextCommand
-            {row} = posFromMouse(ev.currentTarget.model, @ctxEvent)
+            {row} = posFromMouse(ed, @ctxEvent)
         else
-            {row} = editor.getCursorBufferPosition()
-        file = editor.getBuffer().getPath()
+            {row} = ed.getCursorBufferPosition()
+        file = ed.getBuffer().getPath()
         @gdb.breaks.toggle(file, row+1)
 
     _frameChanged: (frame) =>
@@ -110,7 +111,7 @@ class EditorIntegration
 
     _hookEditor: (ed) =>
         timeout = null
-        el = ed.editorElement
+        el = ed.element
         hover = (ev) =>
             try
                 cident = cidentFromMouse ev
